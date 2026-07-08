@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+ * Tema light (default) & dark: skala ink-* dibalik, komponen tetap sama.
+ * ------------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+
+  --ink-950: #f4f5f7; /* page bg */
+  --ink-900: #fbfcfd; /* sidebar, input bg */
+  --ink-850: #ffffff; /* card */
+  --ink-800: #eceff3; /* hover row */
+  --ink-700: #e2e6ec; /* border */
+  --ink-600: #c9d2dd; /* border kuat */
+  --ink-500: #97a3b4; /* disabled */
+  --ink-400: #5c6b82; /* muted */
+  --ink-300: #46536a; /* teks sekunder */
+  --ink-200: #2c3a52; /* teks kuat */
+  --ink-100: #131c2b; /* teks utama */
+
+  --glow: #b45309;
+  --ok: #0e7a4a;
+  --danger: #c22f2f;
+
+  --grid-line: rgb(19 28 43 / 0.05);
+  --glow-shadow: 0 1px 2px rgb(19 28 43 / 0.14);
+  --page-tint:
+    radial-gradient(1200px 600px at 80% -10%, rgb(180 83 9 / 0.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgb(14 122 74 / 0.04), transparent 60%);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Lantai dinaikkan dari hitam-pekat ke slate gelap yang adem, dengan
+     tangga elevasi lembut (bg → sidebar → card → hover) supaya permukaan
+     kebaca tanpa perlu kontras ekstrem. */
+  --ink-950: #13161d; /* page bg */
+  --ink-900: #171b23; /* sidebar, input bg */
+  --ink-850: #1c212b; /* card */
+  --ink-800: #232a36; /* hover row */
+  --ink-700: #2e3644; /* border */
+  --ink-600: #3c4655; /* border kuat */
+  --ink-500: #55617a; /* disabled */
+  --ink-400: #8794a6; /* muted (≥4.5:1 di atas card) */
+  --ink-300: #a9b4c4; /* teks sekunder */
+  --ink-200: #cad2de; /* teks kuat */
+  --ink-100: #e3e8ef; /* teks utama (sedikit diredam dari putih penuh) */
+
+  /* amber diredam saturasinya biar tidak menyilaukan / bergetar di atas gelap */
+  --glow: #eaa93a;
+  --ok: #46cf88;
+  --danger: #f0726f;
+
+  --grid-line: rgb(255 255 255 / 0.025);
+  --glow-shadow: 0 0 18px -8px rgb(234 169 58 / 0.32);
+  --page-tint:
+    radial-gradient(1200px 600px at 80% -10%, rgb(234 169 58 / 0.045), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgb(70 207 136 / 0.03), transparent 60%);
+}
+
+@theme inline {
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ink-950: var(--ink-950);
+  --color-ink-900: var(--ink-900);
+  --color-ink-850: var(--ink-850);
+  --color-ink-800: var(--ink-800);
+  --color-ink-700: var(--ink-700);
+  --color-ink-600: var(--ink-600);
+  --color-ink-500: var(--ink-500);
+  --color-ink-400: var(--ink-400);
+  --color-ink-300: var(--ink-300);
+  --color-ink-200: var(--ink-200);
+  --color-ink-100: var(--ink-100);
+
+  --color-glow: var(--glow);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+}
+
+@layer base {
+  body {
+    @apply bg-ink-950 text-ink-100 font-sans antialiased;
+    background-image: var(--page-tint);
+    transition: background-color 200ms ease-out;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--glow) 25%, transparent);
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--ink-600);
+    border-radius: 8px;
+    border: 2px solid var(--ink-950);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-ink-850 border border-ink-700 rounded-xl;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold
+      transition-all duration-150 cursor-pointer select-none whitespace-nowrap
+      disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-glow text-ink-950 hover:brightness-110 active:scale-[0.98];
+    box-shadow: var(--glow-shadow);
+  }
+  .btn-ghost {
+    @apply border border-ink-600 text-ink-200 hover:border-ink-400 hover:text-ink-100 bg-transparent;
+  }
+  .btn-danger {
+    @apply bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20;
+  }
+
+  .input {
+    @apply h-10 w-full rounded-lg bg-ink-900 border border-ink-600 px-3 font-mono text-sm text-ink-100
+      placeholder:text-ink-400 outline-none transition-colors
+      focus:border-glow/60 focus:ring-2 focus:ring-glow/15;
+  }
+  .label {
+    @apply block text-[11px] font-mono uppercase tracking-[0.18em] text-ink-400 mb-1.5;
+  }
+
+  .tbl {
+    @apply w-full text-sm;
+  }
+  .tbl thead th {
+    @apply text-left text-[11px] font-mono font-medium uppercase tracking-[0.18em] text-ink-400
+      border-b border-ink-700 px-4 py-3;
+  }
+  .tbl tbody td {
+    @apply px-4 py-3 border-b border-ink-800 align-middle;
+  }
+  .tbl tbody tr {
+    @apply transition-colors hover:bg-ink-800/50;
+  }
+
+  .badge,
+  .badge-ok,
+  .badge-off,
+  .badge-dim {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-mono uppercase tracking-wider;
+  }
+  .badge-ok {
+    @apply bg-ok/10 text-ok border border-ok/25;
+  }
+  .badge-off {
+    @apply bg-danger/10 text-danger border border-danger/25;
+  }
+  .badge-dim {
+    @apply bg-ink-800 text-ink-300 border border-ink-600;
+  }
+
+  /* aksi per baris/kartu: muncul saat hover di perangkat ber-mouse,
+     selalu terlihat di perangkat sentuh */
+  .row-actions {
+    @apply transition-opacity;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .row-actions {
+      opacity: 0;
+    }
+    .group:hover .row-actions,
+    .group:focus-within .row-actions {
+      opacity: 1;
+    }
+  }
+
+  .grid-texture {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  .glow-mark {
+    box-shadow: var(--glow-shadow);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise {
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
