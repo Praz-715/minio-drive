@@ -22,22 +22,25 @@ Aplikasi self-hosted di atas **MinIO** (object storage) dengan **dua area terpis
 
 ## 3. Infra (server user, via Tailscale)
 
-- **MinIO**: `100.97.131.6:9000` (API), console asli `:9001`. Root user `minio-admin` / `P@ssw0rd123!!!`. Rilis RELEASE.2025-09-07 (community, sudah archived — no CVE patch).
-  - Juga bisa via LAN `192.168.1.111:9000`.
-- **PostgreSQL 17**: Docker di `100.97.131.6:5432`, db `drive`, user `drive_user` / `Asdf123456`. Bind ke IP Tailscale saja, volume host `/srv/ghanem/pgdata`, `restart: unless-stopped`, backup cron 02:00.
+> ⚠️ Kredensial asli TIDAK ditulis di sini (dokumen ini di-commit). Semua user/password/secret ada di `.env` server (gitignored).
+
+- **MinIO**: `<HOST-MINIO>:9000` (API), console asli `:9001`. Root user & password → `.env` server. Rilis RELEASE.2025-09-07 (community, sudah archived — no CVE patch).
+- **PostgreSQL 17**: Docker `:5432`, db `drive`, user & password → `.env` server. Bind ke IP Tailscale saja, volume host bind-mount, `restart: unless-stopped`, backup cron 02:00.
 - Semua diakses dari laptop dev lewat **tailnet**.
 
 ## 4. Env (`.env`)
 
+> ⚠️ Nilai NYATA hanya di `.env` server (gitignored). Di bawah cuma placeholder — jangan pernah commit kredensial asli. Lihat juga `.env.example`.
+
 ```
-NUXT_SESSION_PASSWORD=<64 hex>            # sesi Console
-NUXT_MINIO_ENDPOINT=http://100.97.131.6:9000
-DATABASE_URL=postgres://drive_user:Asdf123456@100.97.131.6:5432/drive
+NUXT_SESSION_PASSWORD=<64 hex acak>       # sesi Console
+NUXT_MINIO_ENDPOINT=http://<host-minio>:9000
+DATABASE_URL=postgres://<user>:<password>@<host>:5432/drive
 BETTER_AUTH_SECRET=<base64 32>
-BETTER_AUTH_URL=http://localhost:3001
+BETTER_AUTH_URL=<url publik app>
 ADMIN_EMAILS=admin@yasatech.co.id        # email di sini → role admin saat signup Drive
-NUXT_DRIVE_MINIO_ACCESS_KEY=minio-admin  # service account backend Drive (sementara root)
-NUXT_DRIVE_MINIO_SECRET_KEY=P@ssw0rd123!!!
+NUXT_DRIVE_MINIO_ACCESS_KEY=<access key service account>
+NUXT_DRIVE_MINIO_SECRET_KEY=<secret key>
 # NUXT_DEMO=1                            # kalau di-set: SEMUA /api dijawab data palsu (desain tanpa server)
 ```
 
@@ -98,11 +101,13 @@ Helper: `requireDriveSession`, `requireDriveAdmin` (`server/utils/auth.ts`).
 
 ## 10. Akun tes
 
-| Email | Password | Role |
-|---|---|---|
-| admin@yasatech.co.id | `GantiNanti123!` | admin |
-| budi@yasatech.co.id | `budiPass123` | user |
-| siti@yasatech.co.id | `passwordBaru99` | user |
+> Password akun TIDAK ditulis di sini (dokumen di-commit). Simpan di tempat privat / password manager. Yang lama sudah bocor → sudah/harus direset.
+
+| Email | Role |
+|---|---|
+| admin@yasatech.co.id | admin |
+| budi@yasatech.co.id | user |
+| siti@yasatech.co.id | user |
 
 Data demo: folder "Dokumen" (admin) di-share ke Budi (editor); bucket bersama "Tim Marketing" (`team-7de6572e`, 10 GiB) dengan Budi sebagai editor.
 
