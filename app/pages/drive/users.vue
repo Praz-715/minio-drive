@@ -4,12 +4,13 @@ definePageMeta({ layout: 'drive' })
 const toast = useToast()
 const session = authClient.useSession()
 const myId = computed(() => session.value?.data?.user?.id)
+const iamSuper = computed(() => isSuperAdminRole((session.value?.data?.user as any)?.role))
 
-// guard client-side: bukan admin → balik (server tetap enforce via requireDriveAdmin)
+// guard client-side: bukan admin/super_admin → balik (server tetap enforce via requireDriveAdmin)
 watch(
   () => session.value?.data,
   (data) => {
-    if (data && (data.user as any).role !== 'admin') navigateTo('/drive')
+    if (data && !isAdminRole((data.user as any).role)) navigateTo('/drive')
   },
   { immediate: true },
 )
@@ -177,7 +178,9 @@ async function restore(u: any) {
               </div>
             </td>
             <td>
-              <span :class="u.role === 'admin' ? 'badge-ok' : 'badge-dim'">{{ u.role }}</span>
+              <span :class="isAdminRole(u.role) ? 'badge-ok' : 'badge-dim'">
+                <template v-if="u.role === 'super_admin'">★ </template>{{ roleLabel(u.role) }}
+              </span>
             </td>
             <td class="font-mono text-xs text-ink-300">
               {{ fmtBytes(u.storageUsed) }} / {{ gib(u.storageQuota) }} GiB
@@ -190,9 +193,13 @@ async function restore(u: any) {
             </td>
             <td>
               <div class="flex justify-end gap-3 font-mono text-xs row-actions">
-                <button class="text-ink-400 hover:text-glow cursor-pointer" @click="openEdit(u)">edit</button>
                 <button
-                  v-if="!u.deletedAt && u.id !== myId"
+                  v-if="iamSuper || u.role !== 'super_admin'"
+                  class="text-ink-400 hover:text-glow cursor-pointer"
+                  @click="openEdit(u)"
+                >edit</button>
+                <button
+                  v-if="!u.deletedAt && u.id !== myId && (iamSuper || u.role !== 'super_admin')"
                   class="text-ink-400 hover:text-danger cursor-pointer"
                   @click="confirmDelete = u"
                 >nonaktifkan</button>
@@ -232,6 +239,7 @@ async function restore(u: any) {
             <select v-model="addForm.role" class="input cursor-pointer">
               <option value="user">user</option>
               <option value="admin">admin</option>
+              <option v-if="iamSuper" value="super_admin">super admin</option>
             </select>
           </div>
           <div>
@@ -282,6 +290,7 @@ async function restore(u: any) {
             <select v-model="editForm.role" class="input cursor-pointer" :disabled="editing?.id === myId">
               <option value="user">user</option>
               <option value="admin">admin</option>
+              <option v-if="iamSuper" value="super_admin">super admin</option>
             </select>
           </div>
           <div>

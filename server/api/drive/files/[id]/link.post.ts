@@ -2,15 +2,18 @@ import { eq } from 'drizzle-orm'
 import { shareLinks } from '../../../../db/schema'
 
 /**
- * Buat / ganti link publik file (owner only). Satu link aktif per file:
- * yang lama diganti. Body: { expiryDays?: number|null, password?: string }.
+ * Buat / ganti link publik file ATAU folder (owner only). Satu link aktif per
+ * item: yang lama diganti. Body: { expiryDays?: number|null, password?: string }.
+ * - File  → pengunjung bisa preview & download file itu.
+ * - Folder → pengunjung bisa menjelajah isi folder (read-only) & download file di dalamnya.
  */
 export default defineEventHandler(async (event) => {
   const session = await requireDriveSession(event)
   const id = getRouterParam(event, 'id')!
   const { file } = await requireFileAccess(session.user.id, id, 'owner')
-  if (file.isFolder || !file.objectKey) {
-    throw createError({ statusCode: 400, message: 'Link publik hanya untuk file, bukan folder' })
+  if (file.deletedAt) throw createError({ statusCode: 400, message: 'Item ada di sampah' })
+  if (!file.isFolder && !file.objectKey) {
+    throw createError({ statusCode: 400, message: 'File belum siap dibagikan' })
   }
 
   const body = await readBody(event)

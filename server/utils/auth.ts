@@ -15,21 +15,34 @@ let _auth: ReturnType<typeof betterAuth> | null = null
 export function useServerAuth() {
   if (_auth) return _auth
 
-  const adminEmails = (process.env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
+  const parseEmails = (v?: string) =>
+    (v || '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  const adminEmails = parseEmails(process.env.ADMIN_EMAILS)
+  const superAdminEmails = parseEmails(process.env.SUPER_ADMIN_EMAILS)
 
   const baseUrl = process.env.BETTER_AUTH_URL
+  const isProd = process.env.NODE_ENV === 'production'
+
+  // Origin tepercaya untuk cek CSRF better-auth.
+  // - Produksi: HANYA BETTER_AUTH_URL (ketat).
+  // - Dev: tambahkan localhost port umum supaya `nuxt dev` (3000/3001) tidak
+  //   kena 403 walau BETTER_AUTH_URL disetel ke port lain.
+  const trustedOrigins = [
+    ...(baseUrl ? [baseUrl] : []),
+    ...(isProd ? [] : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001']),
+  ]
 
   _auth = betterAuth({
     appName: 'Yasa Drive',
     basePath: '/api/drive-auth',
     database: drizzleAdapter(useDriveDb(), { provider: 'pg', schema }),
     // CSRF/cookie hardening: origin dipercaya = URL app; cookie secure di produksi
-    ...(baseUrl ? { trustedOrigins: [baseUrl] } : {}),
+    ...(trustedOrigins.length ? { trustedOrigins } : {}),
     advanced: {
-      useSecureCookies: process.env.NODE_ENV === 'production',
+      useSecureCookies: isProd,
     },
     emailAndPassword: {
       enabled: true,
@@ -45,12 +58,15 @@ export function useServerAuth() {
     databaseHooks: {
       user: {
         create: {
-          before: async (user) => ({
-            data: {
-              ...user,
-              role: adminEmails.includes(user.email.toLowerCase()) ? 'admin' : 'user',
-            },
-          }),
+          before: async (user) => {
+            const email = user.email.toLowerCase()
+            const role = superAdminEmails.includes(email)
+              ? 'super_admin'
+              : adminEmails.includes(email)
+                ? 'admin'
+                : 'user'
+            return { data: { ...user, role } }
+          },
         },
       },
       session: {
@@ -81,11 +97,29 @@ export async function requireDriveSession(event: any) {
   return session
 }
 
-/** Khusus endpoint admin Drive. */
+/** Punya hak admin (admin ATAU super_admin). */
+export function isAdminRole(role?: string | null): boolean {
+  return role === 'admin' || role === 'super_admin'
+}
+/** Super admin (akses penuh, termasuk semua bucket pribadi). */
+export function isSuperAdminRole(role?: string | null): boolean {
+  return role === 'super_admin'
+}
+
+/** Endpoint admin Drive (admin & super_admin). */
 export async function requireDriveAdmin(event: any) {
   const session = await requireDriveSession(event)
-  if ((session.user as any).role !== 'admin') {
+  if (!isAdminRole((session.user as any).role)) {
     throw createError({ statusCode: 403, message: 'Khusus admin' })
+  }
+  return session
+}
+
+/** Endpoint khusus super admin. */
+export async function requireDriveSuperAdmin(event: any) {
+  const session = await requireDriveSession(event)
+  if (!isSuperAdminRole((session.user as any).role)) {
+    throw createError({ statusCode: 403, message: 'Khusus super admin' })
   }
   return session
 }

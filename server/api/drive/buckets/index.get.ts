@@ -1,23 +1,14 @@
 import { desc, eq, sql } from 'drizzle-orm'
 import { files, teamBucketMembers, teamBuckets, user } from '../../../db/schema'
 
-/** Semua bucket: pribadi (per user) + bersama, dengan pemilik & pemakaian. */
+/**
+ * Bucket bersama (admin & super_admin) + bucket pribadi per user
+ * (HANYA super_admin — data sensitif: menampilkan storage tiap orang).
+ */
 export default defineEventHandler(async (event) => {
-  await requireDriveAdmin(event)
+  const session = await requireDriveAdmin(event)
+  const superAdmin = isSuperAdminRole((session.user as any).role)
   const db = useDriveDb()
-
-  // bucket pribadi = daftar user (yang sudah punya bucket)
-  const users = await db
-    .select({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      bucket: user.bucket,
-      quota: user.storageQuota,
-      used: user.storageUsed,
-      deletedAt: user.deletedAt,
-    })
-    .from(user)
 
   // bucket bersama + jumlah anggota + jumlah file
   const teams = await db.select().from(teamBuckets).orderBy(desc(teamBuckets.createdAt))
@@ -42,8 +33,21 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return {
-    personal: users
+  // bucket pribadi = daftar user (yang sudah punya bucket) — super admin saja
+  let personal: any[] = []
+  if (superAdmin) {
+    const users = await db
+      .select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        bucket: user.bucket,
+        quota: user.storageQuota,
+        used: user.storageUsed,
+        deletedAt: user.deletedAt,
+      })
+      .from(user)
+    personal = users
       .filter((u) => u.bucket)
       .map((u) => ({
         ownerId: u.id,
@@ -53,7 +57,8 @@ export default defineEventHandler(async (event) => {
         quota: u.quota,
         used: u.used,
         deletedAt: u.deletedAt,
-      })),
-    teams: result,
+      }))
   }
+
+  return { isSuperAdmin: superAdmin, personal, teams: result }
 })

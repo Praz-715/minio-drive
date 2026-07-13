@@ -3,12 +3,17 @@ import { account, user } from '../../../db/schema'
 
 export default defineEventHandler(async (event) => {
   const session = await requireDriveAdmin(event)
+  const iamSuper = isSuperAdminRole((session.user as any).role)
   const id = getRouterParam(event, 'id')!
   const body = await readBody(event)
   const db = useDriveDb()
 
   const [target] = await db.select().from(user).where(eq(user.id, id)).limit(1)
   if (!target) throw createError({ statusCode: 404, message: 'User tidak ditemukan' })
+  // akun super admin hanya boleh diubah oleh super admin
+  if (target.role === 'super_admin' && !iamSuper) {
+    throw createError({ statusCode: 403, message: 'Hanya super admin yang bisa mengubah akun super admin' })
+  }
 
   const patch: Record<string, any> = { updatedAt: new Date() }
 
@@ -25,9 +30,17 @@ export default defineEventHandler(async (event) => {
   }
 
   if (body?.role !== undefined) {
-    const role = body.role === 'admin' ? 'admin' : 'user'
-    // jangan sampai admin terakhir menurunkan dirinya sendiri
-    if (id === session.user.id && role !== 'admin') {
+    let role: 'user' | 'admin' | 'super_admin'
+    if (body.role === 'super_admin') {
+      if (!iamSuper) throw createError({ statusCode: 403, message: 'Hanya super admin yang bisa memberi role super admin' })
+      role = 'super_admin'
+    } else if (body.role === 'admin') {
+      role = 'admin'
+    } else {
+      role = 'user'
+    }
+    // jangan sampai menurunkan role akun sendiri di bawah admin (biar tidak lock-out)
+    if (id === session.user.id && !isAdminRole(role)) {
       throw createError({ statusCode: 400, message: 'Tidak bisa menurunkan role akun sendiri' })
     }
     patch.role = role

@@ -8,7 +8,7 @@ const MAX_DEPTH = 32
 async function isAdmin(userId: string): Promise<boolean> {
   const db = useDriveDb()
   const [u] = await db.select({ role: user.role }).from(user).where(eq(user.id, userId)).limit(1)
-  return u?.role === 'admin'
+  return isAdminRole(u?.role)
 }
 
 /** Izin user pada sebuah bucket bersama. */
@@ -155,6 +155,25 @@ export function toItem(f: any, owner?: { id: string; name: string } | null) {
     deletedAt: f.deletedAt,
     updatedAt: f.updatedAt,
   }
+}
+
+/**
+ * true kalau `fileId` SAMA DENGAN `ancestorId` atau salah satu turunannya
+ * (naik lewat parentId, dibatasi kedalaman). Dipakai link publik folder untuk
+ * memastikan file yang diminta pengunjung benar-benar berada di dalam folder
+ * yang dibagikan — bukan file acak yang id-nya ditebak.
+ */
+export async function isWithinFolder(fileId: string, ancestorId: string): Promise<boolean> {
+  if (fileId === ancestorId) return true
+  const db = useDriveDb()
+  let cur = fileId
+  for (let i = 0; i < MAX_DEPTH; i++) {
+    const [row] = await db.select({ parentId: files.parentId }).from(files).where(eq(files.id, cur)).limit(1)
+    if (!row || !row.parentId) return false
+    if (row.parentId === ancestorId) return true
+    cur = row.parentId
+  }
+  return false
 }
 
 export async function ownerMap(ids: string[]): Promise<Record<string, { id: string; name: string; bucket: string | null }>> {

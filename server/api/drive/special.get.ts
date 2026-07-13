@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
     if (term.length < 2) return { items: [] }
 
     // bucket bersama yang bisa kuakses (admin: semua)
-    const isAdmin = (session.user as any).role === 'admin'
+    const isAdmin = isAdminRole((session.user as any).role)
     const teamIds = isAdmin
       ? (await db.select({ id: teamBuckets.id }).from(teamBuckets)).map((r) => r.id)
       : (await db.select({ id: teamBucketMembers.bucketId }).from(teamBucketMembers).where(eq(teamBucketMembers.userId, me))).map((r) => r.id)

@@ -27,8 +27,7 @@ function mcBinary(): string {
 }
 
 export function mcWithCreds(creds: MinioCreds, args: string[]): Promise<any[]> {
-  const config = useRuntimeConfig()
-  const url = new URL(config.minioEndpoint)
+  const url = minioEndpointUrl()
   // JANGAN di-percent-encode: mc membaca userinfo MC_HOST secara literal
   // (split di '@' terakhir), encoding justru merusak kredensial ber-simbol
   const hostUrl = `${url.protocol}//${creds.accessKey}:${creds.secretKey}@${url.host}`
@@ -85,8 +84,7 @@ export async function mc(event: H3Event, args: string[]): Promise<any[]> {
 
 /** Varian tanpa --json, untuk output non-JSON seperti `admin prometheus metrics`. */
 export function mcRawWithCreds(creds: MinioCreds, args: string[]): Promise<string> {
-  const config = useRuntimeConfig()
-  const url = new URL(config.minioEndpoint)
+  const url = minioEndpointUrl()
   const hostUrl = `${url.protocol}//${creds.accessKey}:${creds.secretKey}@${url.host}`
 
   return new Promise((resolve, reject) => {

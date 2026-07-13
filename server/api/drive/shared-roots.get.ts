@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const session = await requireDriveSession(event)
   const me = session.user.id
   const db = useDriveDb()
-  const isAdmin = (session.user as any).role === 'admin'
+  const isAdmin = isAdminRole((session.user as any).role)
 
   // bucket bersama: admin lihat semua, user lihat yang di-assign
   let teams: any[]

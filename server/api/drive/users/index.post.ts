@@ -2,13 +2,21 @@ import { eq } from 'drizzle-orm'
 import { user } from '../../../db/schema'
 
 export default defineEventHandler(async (event) => {
-  await requireDriveAdmin(event)
+  const session = await requireDriveAdmin(event)
+  const iamSuper = isSuperAdminRole((session.user as any).role)
   const body = await readBody(event)
 
   const name = String(body?.name || '').trim()
   const email = String(body?.email || '').trim().toLowerCase()
   const password = String(body?.password || '')
-  const role = body?.role === 'admin' ? 'admin' : 'user'
+  // hanya super admin yang boleh membuat super admin
+  let role: 'user' | 'admin' | 'super_admin' = 'user'
+  if (body?.role === 'super_admin') {
+    if (!iamSuper) throw createError({ statusCode: 403, message: 'Hanya super admin yang bisa membuat super admin' })
+    role = 'super_admin'
+  } else if (body?.role === 'admin') {
+    role = 'admin'
+  }
   const quotaGiB = Number(body?.quotaGiB) > 0 ? Number(body.quotaGiB) : 5
 
   if (!name) throw createError({ statusCode: 400, message: 'Nama wajib diisi' })

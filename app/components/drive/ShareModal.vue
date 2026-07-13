@@ -35,12 +35,11 @@ watch(
       shares.value = await $fetch(`/api/drive/files/${o.id}/shares`)
     } catch {}
     loadingShares.value = false
-    if (!o.isFolder) {
-      try {
-        const res: any = await $fetch(`/api/drive/files/${o.id}/link`)
-        link.value = res.link
-      } catch {}
-    }
+    // link publik berlaku untuk file MAUPUN folder
+    try {
+      const res: any = await $fetch(`/api/drive/files/${o.id}/link`)
+      link.value = res.link
+    } catch {}
   },
   { immediate: true },
 )
@@ -146,9 +145,14 @@ async function copyPublic() {
         <p v-else-if="!loadingShares" class="mt-3 font-mono text-[11px] text-ink-500">belum dibagikan ke siapa pun</p>
       </div>
 
-      <!-- link publik -->
-      <div v-if="!item?.isFolder" class="border-t border-ink-800 pt-5">
-        <p class="label">Link Publik <span class="normal-case tracking-normal">(siapa pun dengan link bisa buka & download)</span></p>
+      <!-- link publik (file & folder) -->
+      <div class="border-t border-ink-800 pt-5">
+        <p class="label">
+          Link Publik
+          <span class="normal-case tracking-normal">
+            ({{ item?.isFolder ? 'siapa pun dengan link bisa menjelajah & download isinya' : 'siapa pun dengan link bisa buka & download' }})
+          </span>
+        </p>
 
         <!-- belum ada link → form buat -->
         <template v-if="!link">

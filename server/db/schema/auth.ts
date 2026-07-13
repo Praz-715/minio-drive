@@ -12,7 +12,8 @@ export const user = pgTable('user', {
   emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
   // -- tambahan Drive --
-  role: text('role', { enum: ['admin', 'user'] }).notNull().default('user'),
+  // super_admin: akses penuh (termasuk lihat semua bucket pribadi) · admin: kelola user & bucket bersama
+  role: text('role', { enum: ['super_admin', 'admin', 'user'] }).notNull().default('user'),
   storageQuota: bigint('storage_quota', { mode: 'number' }).notNull().default(5 * 1024 ** 3), // 5 GiB
   storageUsed: bigint('storage_used', { mode: 'number' }).notNull().default(0),
   bucket: text('bucket'), // bucket pribadi MinIO (drive-{id}), dibuat saat provisioning

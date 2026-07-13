@@ -2,9 +2,29 @@ import { Client } from 'minio'
 import type { H3Event } from 'h3'
 import type { MinioCreds } from './creds'
 
+/**
+ * Endpoint MinIO dari config, dinormalisasi & divalidasi. Kalau nilainya tanpa
+ * skema (mis. "s3.contoh.com") dianggap https:// — supaya salah tulis di .env
+ * tidak bikin `new URL()` lempar error yang membingungkan.
+ */
+export function minioEndpointUrl(): URL {
+  const raw = String(useRuntimeConfig().minioEndpoint || '').trim()
+  if (!raw) {
+    throw createError({ statusCode: 500, message: 'NUXT_MINIO_ENDPOINT belum di-set di .env' })
+  }
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+  try {
+    return new URL(withScheme)
+  } catch {
+    throw createError({
+      statusCode: 500,
+      message: `NUXT_MINIO_ENDPOINT tidak valid: "${raw}" (contoh benar: https://s3.contoh.com atau http://localhost:9000)`,
+    })
+  }
+}
+
 export function minioClientFor(creds: MinioCreds): Client {
-  const config = useRuntimeConfig()
-  const url = new URL(config.minioEndpoint)
+  const url = minioEndpointUrl()
   return new Client({
     endPoint: url.hostname,
     port: url.port ? Number(url.port) : url.protocol === 'https:' ? 443 : 80,

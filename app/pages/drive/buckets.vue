@@ -6,7 +6,7 @@ const session = authClient.useSession()
 watch(
   () => session.value?.data,
   (d) => {
-    if (d && (d.user as any).role !== 'admin') navigateTo('/drive')
+    if (d && !isAdminRole((d.user as any).role)) navigateTo('/drive')
   },
   { immediate: true },
 )
@@ -14,6 +14,7 @@ watch(
 const { data, refresh, status } = useFetch('/api/drive/buckets', { server: false })
 const teams = computed(() => (data.value as any)?.teams || [])
 const personal = computed(() => (data.value as any)?.personal || [])
+const isSuperAdmin = computed(() => (data.value as any)?.isSuperAdmin || false)
 const busy = ref(false)
 function gib(b?: number | null) {
   return b ? +(b / 1024 ** 3).toFixed(1) : 0
@@ -119,7 +120,9 @@ async function deleteBucket() {
     <div class="flex flex-wrap items-end justify-between gap-3 rise">
       <div>
         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Manajemen Bucket</h1>
-        <p class="text-ink-400 text-sm mt-1">{{ teams.length }} bucket bersama · {{ personal.length }} bucket pribadi</p>
+        <p class="text-ink-400 text-sm mt-1">
+          {{ teams.length }} bucket bersama<template v-if="isSuperAdmin"> · {{ personal.length }} bucket pribadi</template>
+        </p>
       </div>
       <button class="btn-primary" @click="showCreate = true">+ Bucket Bersama</button>
     </div>
@@ -162,8 +165,8 @@ async function deleteBucket() {
         </div>
       </div>
 
-      <!-- BUCKET PRIBADI -->
-      <div>
+      <!-- BUCKET PRIBADI (super admin saja) -->
+      <div v-if="isSuperAdmin">
         <p class="label mb-2">Bucket Pribadi (per user)</p>
         <div class="card overflow-x-auto rise">
           <table class="tbl">

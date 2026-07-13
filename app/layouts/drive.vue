@@ -7,7 +7,7 @@ const signals = useDriveSignals()
 const { data: me, refresh: refreshMe } = useFetch('/api/drive/me', { server: false })
 const { data: sharedRoots, refresh: refreshShared } = useFetch('/api/drive/shared-roots', { server: false })
 
-const isAdmin = computed(() => me.value?.role === 'admin')
+const isAdmin = computed(() => isAdminRole(me.value?.role))
 const sharedTeams = computed(() => (sharedRoots.value as any)?.teams || [])
 const sharedItems = computed(() => (sharedRoots.value as any)?.shares || [])
 const usagePct = computed(() =>
