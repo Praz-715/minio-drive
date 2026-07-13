@@ -175,9 +175,10 @@ const nav = computed(() => [
         >
           <span>👥</span>Drive Bersama
         </NuxtLink>
-        <div v-if="sharedTeams.length" class="ml-6 border-l border-ink-700 pl-2 space-y-0.5">
+        <!-- maksimal ~3 terlihat; sisanya scroll di section ini saja -->
+        <div v-if="sharedTeams.length" class="ml-6 border-l border-ink-700 pl-2 space-y-0.5 max-h-[6.5rem] overflow-y-auto sidebar-scroll">
           <NuxtLink
-            v-for="t in sharedTeams.slice(0, 8)"
+            v-for="t in sharedTeams"
             :key="t.id"
             :to="`/drive/team/${t.id}`"
             class="flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-colors truncate"
@@ -196,9 +197,10 @@ const nav = computed(() => [
         >
           <span>🔗</span>Dibagikan ke saya
         </NuxtLink>
-        <div v-if="sharedItems.length" class="ml-6 border-l border-ink-700 pl-2 space-y-0.5">
+        <!-- maksimal ~3 terlihat; sisanya scroll di section ini saja -->
+        <div v-if="sharedItems.length" class="ml-6 border-l border-ink-700 pl-2 space-y-0.5 max-h-[8.25rem] overflow-y-auto sidebar-scroll">
           <NuxtLink
-            v-for="s in sharedItems.slice(0, 6)"
+            v-for="s in sharedItems"
             :key="s.id"
             :to="s.isFolder ? `/drive/folder/${s.id}` : '/drive/shared-with-me'"
             class="flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors"

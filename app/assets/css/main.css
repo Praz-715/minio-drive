@@ -193,6 +193,22 @@
   .glow-mark {
     box-shadow: var(--glow-shadow);
   }
+
+  /* scrollbar tipis untuk section yang bisa di-scroll di sidebar */
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(120 120 140 / 0.45) transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgb(120 120 140 / 0.4);
+    border-radius: 9999px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 @keyframes rise {
