@@ -3,7 +3,9 @@ definePageMeta({ layout: 'drive' })
 
 // "Dibagikan ke saya" = file/folder yang di-share LANGSUNG ke saya oleh user
 // lain (lewat tombol Bagikan). Bukan bucket bersama — itu di /drive/shared.
-const { data, status } = useFetch('/api/drive/shared-roots', { server: false })
+const toast = useToast()
+const signals = useDriveSignals()
+const { data, status, refresh } = useFetch('/api/drive/shared-roots', { server: false })
 const shares = computed(() => (data.value as any)?.shares || [])
 
 const previewItem = ref<any>(null)
@@ -14,6 +16,25 @@ function openShare(s: any) {
 async function download(o: any) {
   const { url } = await $fetch<{ url: string }>(`/api/drive/files/${o.id}/url`)
   window.open(url, '_blank')
+}
+
+// ---- lepaskan akses sendiri (hapus dari "Dibagikan ke saya") ----
+const confirmLeave = ref<any>(null)
+const leaving = ref(false)
+async function leaveShare() {
+  leaving.value = true
+  try {
+    // tanpa userId = self-leave (hapus baris share milik saya)
+    await $fetch(`/api/drive/files/${confirmLeave.value.id}/shares`, { method: 'DELETE' })
+    toast.ok(`"${confirmLeave.value.name}" dilepaskan dari daftar kamu`)
+    confirmLeave.value = null
+    signals.value.sharedRefresh++ // sidebar ikut refresh
+    await refresh()
+  } catch (e: any) {
+    toast.error(apiError(e))
+  } finally {
+    leaving.value = false
+  }
 }
 </script>
 
@@ -30,7 +51,7 @@ async function download(o: any) {
       <div v-if="shares.length" class="card overflow-x-auto">
         <table class="tbl">
           <thead>
-            <tr><th>Nama</th><th class="w-36 hidden sm:table-cell">Pemilik</th><th class="w-24">Ukuran</th><th class="w-28">Akses kamu</th></tr>
+            <tr><th>Nama</th><th class="w-36 hidden sm:table-cell">Pemilik</th><th class="w-24">Ukuran</th><th class="w-28">Akses kamu</th><th class="w-24" /></tr>
           </thead>
           <tbody>
             <tr v-for="s in shares" :key="s.id" class="group">
@@ -52,6 +73,13 @@ async function download(o: any) {
                   {{ s.permission === 'editor' ? '✎ ' : '👁 ' }}{{ permLabel(s.permission) }}
                 </span>
               </td>
+              <td class="text-right">
+                <button
+                  class="row-actions text-ink-400 hover:text-danger font-mono text-xs cursor-pointer px-1"
+                  title="Lepaskan dari daftar kamu"
+                  @click="confirmLeave = s"
+                >lepaskan</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -61,6 +89,22 @@ async function download(o: any) {
         Belum ada yang dibagikan ke kamu.
       </p>
     </template>
+
+    <!-- konfirmasi lepaskan -->
+    <Modal :open="!!confirmLeave" title="Lepaskan Akses" @close="confirmLeave = null">
+      <p class="text-sm text-ink-200 leading-relaxed">
+        Lepaskan <span class="font-mono text-ink-100">{{ confirmLeave?.name }}</span> dari
+        <span class="font-semibold">Dibagikan ke saya</span>?
+        Item ini akan hilang dari daftarmu. File-nya <span class="text-ink-100 font-semibold">tidak dihapus</span> —
+        pemilik ({{ confirmLeave?.ownerName }}) masih bisa membagikannya lagi.
+      </p>
+      <div class="flex justify-end gap-2 mt-5">
+        <button class="btn-ghost" @click="confirmLeave = null">Batal</button>
+        <button class="btn-danger" :disabled="leaving" @click="leaveShare">
+          {{ leaving ? 'Melepaskan…' : 'Lepaskan' }}
+        </button>
+      </div>
+    </Modal>
 
     <DriveFilePreview :item="previewItem" @close="previewItem = null" @share="() => {}" @download="download" />
   </div>
