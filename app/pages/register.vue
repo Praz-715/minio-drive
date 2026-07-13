@@ -2,10 +2,20 @@
 definePageMeta({ layout: 'blank' })
 
 const toast = useToast()
+const route = useRoute()
 const name = ref('')
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
+
+function destAfterAuth(): string {
+  const r = String(route.query.redirect || '')
+  return r.startsWith('/') && !r.startsWith('//') ? r : '/drive'
+}
+const loginTo = computed(() => {
+  const r = String(route.query.redirect || '')
+  return r ? `/?redirect=${encodeURIComponent(r)}` : '/'
+})
 
 async function submit() {
   if (password.value.length < 8) {
@@ -24,7 +34,7 @@ async function submit() {
     return
   }
   toast.ok('Akun dibuat — selamat datang!')
-  await navigateTo('/drive')
+  await navigateTo(destAfterAuth())
 }
 </script>
 
@@ -66,7 +76,7 @@ async function submit() {
         </button>
         <p class="text-center text-sm text-ink-400">
           Sudah punya akun?
-          <NuxtLink to="/" class="text-glow font-semibold hover:brightness-110">Masuk</NuxtLink>
+          <NuxtLink :to="loginTo" class="text-glow font-semibold hover:brightness-110">Masuk</NuxtLink>
         </p>
       </form>
     </div>

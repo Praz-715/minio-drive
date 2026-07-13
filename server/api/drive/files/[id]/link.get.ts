@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
     link: {
       token: link.token,
       url: `${origin}/s/${link.token}`,
+      permission: link.permission,
       expiresAt: link.expiresAt,
       hasPassword: !!link.password,
       downloads: link.downloads,

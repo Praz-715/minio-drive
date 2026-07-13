@@ -16,6 +16,7 @@ const downloading = ref(false)
 
 // ---- klaim otomatis ke akun (kalau pengunjung sudah login) ----
 const loggedIn = ref(false)
+const sessionChecked = ref(false)
 const claimed = ref<{ fileId: string; isFolder: boolean; already: boolean } | null>(null)
 let claimTried = false
 async function maybeClaim() {
@@ -176,6 +177,7 @@ onMounted(async () => {
     const { data } = await authClient.getSession()
     loggedIn.value = !!data?.session
   } catch {}
+  sessionChecked.value = true
   if (!meta.value?.found || meta.value.expired) return
   if (meta.value.hasPassword) return // tunggu gerbang password
   if (meta.value.isFolder) browse()
@@ -214,6 +216,20 @@ useHead({
           :to="claimed.isFolder ? `/drive/folder/${claimed.fileId}` : '/drive/shared-with-me'"
           class="btn-primary h-8 text-xs shrink-0"
         >Buka di Drive saya</NuxtLink>
+      </div>
+    </Transition>
+
+    <!-- CTA anonim: login/daftar biar item nempel ke akun (dapat izin sesuai link) -->
+    <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0 -translate-y-2" leave-active-class="transition duration-150" leave-to-class="opacity-0">
+      <div
+        v-if="sessionChecked && !loggedIn && meta?.found && !meta?.expired"
+        class="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-6 py-2.5 border-b border-ink-800 bg-ink-900/40 text-sm"
+      >
+        <span class="flex-1 min-w-40 text-ink-300">
+          Punya akun? <span class="hidden sm:inline">Login biar {{ meta.isFolder ? 'folder' : 'file' }} ini otomatis nempel di Drive kamu.</span>
+        </span>
+        <NuxtLink :to="`/?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-primary h-8 text-xs shrink-0">Login</NuxtLink>
+        <NuxtLink :to="`/register?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-ghost h-8 text-xs shrink-0">Daftar</NuxtLink>
       </div>
     </Transition>
 

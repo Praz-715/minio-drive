@@ -50,25 +50,37 @@ export default defineEventHandler(async (event) => {
   // item tim → akses lewat keanggotaan, bukan fileShares
   if (root.teamBucketId) return { claimed: false, reason: 'team' }
 
-  // idempoten: kalau share ke user ini sudah ada, jangan dobel
+  // idempoten + upgrade-only: kalau belum ada → buat; kalau sudah ada tapi link
+  // editor sedangkan share lama viewer → naikkan jadi editor. TIDAK pernah turun.
   const [existing] = await db
-    .select({ id: fileShares.id })
+    .select({ id: fileShares.id, permission: fileShares.permission })
     .from(fileShares)
     .where(and(eq(fileShares.fileId, root.id), eq(fileShares.sharedWithId, me)))
     .limit(1)
 
+  let upgraded = false
   if (!existing) {
     try {
       await db.insert(fileShares).values({
         fileId: root.id,
         sharedWithId: me,
         sharedById: link.createdById,
-        permission: link.permission, // link = 'viewer'
+        permission: link.permission, // viewer / editor sesuai link
       })
     } catch {
       // kemungkinan balapan (unique index fileId+sharedWith) — anggap sudah ada
     }
+  } else if (link.permission === 'editor' && existing.permission === 'viewer') {
+    await db.update(fileShares).set({ permission: 'editor' }).where(eq(fileShares.id, existing.id))
+    upgraded = true
   }
 
-  return { claimed: true, already: !!existing, fileId: root.id, isFolder: root.isFolder, name: root.name }
+  return {
+    claimed: true,
+    already: !!existing && !upgraded,
+    permission: link.permission,
+    fileId: root.id,
+    isFolder: root.isFolder,
+    name: root.name,
+  }
 })

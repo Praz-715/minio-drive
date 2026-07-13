@@ -2,9 +2,21 @@
 definePageMeta({ layout: 'blank' })
 
 const toast = useToast()
+const route = useRoute()
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
+
+// tujuan setelah login: ?redirect= (path internal saja) → default /drive.
+// dipakai flow "buka link share → login → balik ke link → auto-afiliasi".
+function destAfterAuth(): string {
+  const r = String(route.query.redirect || '')
+  return r.startsWith('/') && !r.startsWith('//') ? r : '/drive'
+}
+const registerTo = computed(() => {
+  const r = String(route.query.redirect || '')
+  return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register'
+})
 
 async function submit() {
   loading.value = true
@@ -14,7 +26,7 @@ async function submit() {
     toast.error(error.message || 'Email atau password salah')
     return
   }
-  await navigateTo('/drive')
+  await navigateTo(destAfterAuth())
 }
 
 const features = [
@@ -91,7 +103,7 @@ const features = [
           </button>
           <p class="text-center text-sm text-ink-400">
             Belum punya akun?
-            <NuxtLink to="/register" class="text-glow font-semibold hover:brightness-110">Daftar</NuxtLink>
+            <NuxtLink :to="registerTo" class="text-glow font-semibold hover:brightness-110">Daftar</NuxtLink>
           </p>
         </form>
 

@@ -17,10 +17,11 @@ const EXPIRY_OPTS = [
   { label: '30 hari', days: 30 },
   { label: 'Selamanya', days: null as number | null },
 ]
-const form = reactive({ expiryDays: 7 as number | null, password: '' })
+const form = reactive({ expiryDays: 7 as number | null, password: '', permission: 'viewer' as 'viewer' | 'editor' })
 function resetForm() {
   form.expiryDays = 7
   form.password = ''
+  form.permission = 'viewer'
 }
 
 watch(
@@ -81,7 +82,7 @@ async function createLink() {
   try {
     const res: any = await $fetch(`/api/drive/files/${props.item.id}/link`, {
       method: 'POST',
-      body: { expiryDays: form.expiryDays, password: form.password || undefined },
+      body: { expiryDays: form.expiryDays, password: form.password || undefined, permission: form.permission },
     })
     link.value = res
     toast.ok('Link publik dibuat')
@@ -159,16 +160,26 @@ async function copyPublic() {
           <div class="flex flex-wrap items-end gap-2 mt-1">
             <div>
               <label class="label mb-1">Masa berlaku</label>
-              <select v-model="form.expiryDays" class="input h-10 w-36 cursor-pointer">
+              <select v-model="form.expiryDays" class="input h-10 w-32 cursor-pointer">
                 <option v-for="o in EXPIRY_OPTS" :key="String(o.days)" :value="o.days">{{ o.label }}</option>
               </select>
             </div>
-            <div class="flex-1 min-w-40">
+            <div v-if="!item?.teamBucketId">
+              <label class="label mb-1">Akses</label>
+              <select v-model="form.permission" class="input h-10 w-28 cursor-pointer">
+                <option value="viewer">viewer</option>
+                <option value="editor">editor</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-36">
               <label class="label mb-1">Password <span class="normal-case tracking-normal">(opsional)</span></label>
               <input v-model="form.password" type="text" class="input h-10" placeholder="kosongkan = tanpa password" spellcheck="false" autocomplete="off" />
             </div>
             <button class="btn-primary h-10 shrink-0" :disabled="linkLoading" @click="createLink">Buat Link</button>
           </div>
+          <p v-if="form.permission === 'editor'" class="mt-1.5 font-mono text-[11px] text-ink-500">
+            editor = yang buka link lalu login/daftar bisa ikut mengedit · pengunjung anonim tetap lihat saja
+          </p>
         </template>
 
         <!-- sudah ada link -->
@@ -178,6 +189,7 @@ async function copyPublic() {
             <button class="btn-primary shrink-0 h-10" @click="copyPublic">Copy</button>
           </div>
           <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 font-mono text-[11px] text-ink-400">
+            <span :class="link.permission === 'editor' ? 'text-ok' : ''">akses: {{ link.permission === 'editor' ? 'editor' : 'viewer' }}</span>
             <span :class="link.expired && 'text-danger'">
               {{ link.expired ? '⚠ kedaluwarsa' : link.expiresAt ? `kedaluwarsa ${fmtDate(link.expiresAt)}` : 'tidak kedaluwarsa' }}
             </span>
