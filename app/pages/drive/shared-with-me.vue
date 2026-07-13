@@ -39,7 +39,10 @@ async function download(o: any) {
                   <span class="inline-flex w-9 justify-center rounded border font-mono text-[9px] px-1 py-0.5 shrink-0" :class="fileChip(s.name, s.isFolder).cls">
                     {{ fileChip(s.name, s.isFolder).label }}
                   </span>
-                  <span class="font-mono text-[13px] truncate">{{ s.name }}{{ s.isFolder ? '/' : '' }}</span>
+                  <span class="min-w-0">
+                    <span class="block font-mono text-[13px] truncate">{{ s.name }}{{ s.isFolder ? '/' : '' }}</span>
+                    <span class="block sm:hidden font-mono text-[10px] text-ink-500 truncate">oleh {{ s.ownerName }}</span>
+                  </span>
                 </button>
               </td>
               <td class="text-xs text-ink-300 hidden sm:table-cell truncate">{{ s.ownerName }}</td>
