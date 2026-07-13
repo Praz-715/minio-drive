@@ -402,6 +402,12 @@ async function onMoved() {
         <span v-else-if="teamRoot" class="inline-flex badge-ok mb-1">bucket bersama</span>
         <span v-else-if="ownerRoot" class="inline-flex badge-ok mb-1">akses super admin · drive user lain</span>
         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight truncate">{{ title }}</h1>
+        <!-- role kamu di folder yang dibagikan (bukan milik sendiri) -->
+        <span
+          v-if="mode === 'browse' && (access === 'viewer' || access === 'editor')"
+          :class="['inline-flex mt-1', permBadgeClass(access)]"
+          :title="access === 'editor' ? 'kamu bisa upload & ubah di sini' : 'kamu hanya bisa lihat & download'"
+        >{{ access === 'editor' ? '✎ ' : '👁 ' }}akses kamu: {{ permLabel(access) }}</span>
       </div>
       <div class="flex items-center gap-2">
         <div class="flex rounded-lg border border-ink-600 overflow-hidden h-9">

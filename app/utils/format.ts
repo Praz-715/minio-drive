@@ -40,6 +40,18 @@ export function apiError(e: any): string {
   return e?.data?.message || e?.statusMessage || e?.message || 'Terjadi kesalahan'
 }
 
+/** Label izin share/akses yang manusiawi. */
+export function permLabel(p?: string | null): string {
+  if (p === 'editor') return 'bisa edit'
+  if (p === 'viewer') return 'lihat saja'
+  return p || '—'
+}
+
+/** Kelas badge untuk izin: editor menonjol (hijau), viewer redup. */
+export function permBadgeClass(p?: string | null): string {
+  return p === 'editor' ? 'badge-ok' : 'badge-dim'
+}
+
 const CHIP_MAP: [RegExp, string, string][] = [
   [/\.(png|jpe?g|gif|webp|svg|avif|ico|bmp)$/i, 'IMG', 'text-ok border-ok/30'],
   [/\.(mp4|mkv|webm|mov|avi)$/i, 'VID', 'text-glow border-glow/30'],

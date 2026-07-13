@@ -30,7 +30,7 @@ async function download(o: any) {
       <div v-if="shares.length" class="card overflow-x-auto">
         <table class="tbl">
           <thead>
-            <tr><th>Nama</th><th class="w-36 hidden sm:table-cell">Pemilik</th><th class="w-24">Ukuran</th><th class="w-20">Izin</th></tr>
+            <tr><th>Nama</th><th class="w-36 hidden sm:table-cell">Pemilik</th><th class="w-24">Ukuran</th><th class="w-28">Akses kamu</th></tr>
           </thead>
           <tbody>
             <tr v-for="s in shares" :key="s.id" class="group">
@@ -44,7 +44,11 @@ async function download(o: any) {
               </td>
               <td class="text-xs text-ink-300 hidden sm:table-cell truncate">{{ s.ownerName }}</td>
               <td class="font-mono text-xs text-ink-300">{{ s.isFolder ? '—' : fmtBytes(s.size) }}</td>
-              <td><span class="badge-dim">{{ s.permission }}</span></td>
+              <td>
+                <span :class="permBadgeClass(s.permission)" :title="s.permission">
+                  {{ s.permission === 'editor' ? '✎ ' : '👁 ' }}{{ permLabel(s.permission) }}
+                </span>
+              </td>
             </tr>
           </tbody>
         </table>

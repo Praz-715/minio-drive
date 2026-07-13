@@ -201,11 +201,16 @@ const nav = computed(() => [
             v-for="s in sharedItems.slice(0, 6)"
             :key="s.id"
             :to="s.isFolder ? `/drive/folder/${s.id}` : '/drive/shared-with-me'"
-            class="flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-colors truncate"
+            class="flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-colors"
             :class="route.path === `/drive/folder/${s.id}` ? 'text-glow' : 'text-ink-400 hover:text-ink-100'"
           >
-            <span class="font-mono text-[10px]">{{ s.isFolder ? '▸' : '·' }}</span>
-            <span class="truncate">{{ s.name }}</span>
+            <span class="font-mono text-[10px] shrink-0">{{ s.isFolder ? '▸' : '·' }}</span>
+            <span class="truncate flex-1 min-w-0">{{ s.name }}</span>
+            <span
+              class="shrink-0 text-[10px]"
+              :class="s.permission === 'editor' ? 'text-glow' : 'text-ink-600'"
+              :title="s.permission === 'editor' ? 'bisa edit' : 'lihat saja'"
+            >{{ s.permission === 'editor' ? '✎' : '👁' }}</span>
           </NuxtLink>
         </div>
 
