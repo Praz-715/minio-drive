@@ -69,9 +69,7 @@ async function leaveShare() {
               <td class="text-xs text-ink-300 hidden sm:table-cell truncate">{{ s.ownerName }}</td>
               <td class="font-mono text-xs text-ink-300">{{ s.isFolder ? '—' : fmtBytes(s.size) }}</td>
               <td>
-                <span :class="permBadgeClass(s.permission)" :title="s.permission">
-                  {{ s.permission === 'editor' ? '✎ ' : '👁 ' }}{{ permLabel(s.permission) }}
-                </span>
+                <span :class="permBadgeClass(s.permission)" :title="s.permission">{{ permLabel(s.permission) }}</span>
               </td>
               <td class="text-right">
                 <button

@@ -407,7 +407,7 @@ async function onMoved() {
           v-if="mode === 'browse' && (access === 'viewer' || access === 'editor')"
           :class="['inline-flex mt-1', permBadgeClass(access)]"
           :title="access === 'editor' ? 'kamu bisa upload & ubah di sini' : 'kamu hanya bisa lihat & download'"
-        >{{ access === 'editor' ? '✎ ' : '👁 ' }}akses kamu: {{ permLabel(access) }}</span>
+        >akses kamu: {{ permLabel(access) }}</span>
       </div>
       <div class="flex items-center gap-2">
         <div class="flex rounded-lg border border-ink-600 overflow-hidden h-9">
