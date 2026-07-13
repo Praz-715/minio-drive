@@ -179,9 +179,13 @@ async function deleteBucket() {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="p in personal" :key="p.bucket">
+              <tr v-for="p in personal" :key="p.bucket" class="group">
                 <td>
-                  <p class="font-semibold truncate">{{ p.ownerName }}</p>
+                  <NuxtLink
+                    :to="`/drive/user-files/${p.ownerId}`"
+                    class="font-semibold truncate hover:text-glow transition-colors"
+                    title="Jelajah Drive user ini"
+                  >{{ p.ownerName }}</NuxtLink>
                   <p class="font-mono text-[11px] text-ink-400 truncate">{{ p.ownerEmail }}</p>
                 </td>
                 <td class="font-mono text-[11px] text-ink-400 hidden md:table-cell">{{ p.bucket }}</td>

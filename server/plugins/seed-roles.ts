@@ -1,43 +1,41 @@
-import { and, eq, ne, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { user } from '../db/schema'
 
 /**
- * Seed role dari env saat startup — idempoten & PROMOTE-ONLY (tidak pernah
- * menurunkan role yang sudah ada):
- *   - SUPER_ADMIN_EMAILS → pastikan super_admin
- *   - ADMIN_EMAILS       → pastikan minimal admin (promote dari user)
+ * Bootstrap owner — RBAC full di DB, TANPA env. Plugin ini HANYA bertindak
+ * kalau di DB belum ada satu pun super_admin (mis. instalasi baru / restore DB
+ * / tanpa sengaja kehilangan semua super admin). Begitu ada super admin, role
+ * dikelola sepenuhnya lewat UI Kelola User dan plugin ini jadi no-op — jadi
+ * TIDAK pernah menimpa perubahan yang kamu buat di UI.
  *
- * Bikin penetapan role jadi deklaratif: set env, restart, role langsung nempel.
- * Perlu buat bootstrap super admin pertama (yang tidak bisa dibuat lewat UI).
+ * Ganti dua konstanta di bawah kalau owner-nya beda.
  */
+const BOOTSTRAP_SUPER_ADMIN = 'admin@yasatech.co.id'
+const BOOTSTRAP_ADMIN = 'teguh.prasetyo@yasatech.co.id'
+
 export default defineNitroPlugin(async () => {
-  const parse = (v?: string) =>
-    (v || '')
-      .split(',')
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean)
-
-  const supers = parse(process.env.SUPER_ADMIN_EMAILS)
-  const admins = parse(process.env.ADMIN_EMAILS).filter((e) => !supers.includes(e))
-  if (!supers.length && !admins.length) return
-
   try {
     const db = useDriveDb()
-    for (const email of supers) {
-      await db
-        .update(user)
-        .set({ role: 'super_admin', updatedAt: new Date() })
-        .where(and(sql`lower(${user.email}) = ${email}`, ne(user.role, 'super_admin')))
-    }
-    for (const email of admins) {
-      // promote HANYA dari user → admin (jangan turunkan admin/super yang sudah ada)
-      await db
-        .update(user)
-        .set({ role: 'admin', updatedAt: new Date() })
-        .where(and(sql`lower(${user.email}) = ${email}`, eq(user.role, 'user')))
-    }
-    console.log(`[yasa] seed-roles: dicek ${supers.length} super admin + ${admins.length} admin`)
+    const [{ supers }] = await db
+      .select({ supers: sql<number>`count(*)::int` })
+      .from(user)
+      .where(eq(user.role, 'super_admin'))
+    if (supers > 0) return // sudah ada super admin → DB-only, jangan sentuh apa pun
+
+    const [sa] = await db
+      .update(user)
+      .set({ role: 'super_admin', updatedAt: new Date() })
+      .where(sql`lower(${user.email}) = ${BOOTSTRAP_SUPER_ADMIN}`)
+      .returning({ id: user.id })
+    // owner kedua → admin, hanya promote dari user (jangan turunkan yang lebih tinggi)
+    await db
+      .update(user)
+      .set({ role: 'admin', updatedAt: new Date() })
+      .where(and(sql`lower(${user.email}) = ${BOOTSTRAP_ADMIN}`, eq(user.role, 'user')))
+
+    if (sa) console.log(`[yasa] bootstrap: tidak ada super admin → ${BOOTSTRAP_SUPER_ADMIN} di-set super admin`)
+    else console.warn(`[yasa] bootstrap: belum ada super admin & akun ${BOOTSTRAP_SUPER_ADMIN} belum terdaftar`)
   } catch (e: any) {
-    console.warn('[yasa] seed-roles gagal (non-fatal):', e?.message || e)
+    console.warn('[yasa] bootstrap role gagal (non-fatal):', e?.message || e)
   }
 })

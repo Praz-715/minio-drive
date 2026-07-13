@@ -36,33 +36,47 @@ export default defineEventHandler(async (event) => {
     const term = String(q.q || '').trim()
     if (term.length < 2) return { items: [] }
 
-    // bucket bersama yang bisa kuakses (admin: semua)
-    const isAdmin = isAdminRole((session.user as any).role)
-    const teamIds = isAdmin
-      ? (await db.select({ id: teamBuckets.id }).from(teamBuckets)).map((r) => r.id)
-      : (await db.select({ id: teamBucketMembers.bucketId }).from(teamBucketMembers).where(eq(teamBucketMembers.userId, me))).map((r) => r.id)
-    const teamFilter = teamIds.length ? sql`OR team_bucket_id IN ${teamIds}` : sql``
+    if (isSuperAdminRole((session.user as any).role)) {
+      // super admin: cari di SELURUH file (god-mode)
+      const res: any = await db.execute(sql`
+        SELECT id, name, is_folder AS "isFolder", size, mime_type AS "mimeType", starred,
+               parent_id AS "parentId", owner_id AS "ownerId", deleted_at AS "deletedAt",
+               updated_at AS "updatedAt"
+        FROM files
+        WHERE deleted_at IS NULL AND name ILIKE ${'%' + term + '%'}
+        ORDER BY updated_at DESC
+        LIMIT 50
+      `)
+      rows = Array.isArray(res) ? res : res.rows || []
+    } else {
+      // bucket bersama yang bisa kuakses (admin: semua)
+      const isAdmin = isAdminRole((session.user as any).role)
+      const teamIds = isAdmin
+        ? (await db.select({ id: teamBuckets.id }).from(teamBuckets)).map((r) => r.id)
+        : (await db.select({ id: teamBucketMembers.bucketId }).from(teamBucketMembers).where(eq(teamBucketMembers.userId, me))).map((r) => r.id)
+      const teamFilter = teamIds.length ? sql`OR team_bucket_id IN ${teamIds}` : sql``
 
-    // seluruh pohon yang bisa kuakses: milikku + share langsung + file bucket bersama + turunannya
-    const res: any = await db.execute(sql`
-      WITH RECURSIVE accessible AS (
-        SELECT id FROM files WHERE owner_id = ${me} ${teamFilter}
-        UNION
-        SELECT file_id FROM file_shares WHERE shared_with_id = ${me}
-        UNION
-        SELECT f.id FROM files f JOIN accessible a ON f.parent_id = a.id
-      )
-      SELECT id, name, is_folder AS "isFolder", size, mime_type AS "mimeType", starred,
-             parent_id AS "parentId", owner_id AS "ownerId", deleted_at AS "deletedAt",
-             updated_at AS "updatedAt"
-      FROM files
-      WHERE id IN (SELECT id FROM accessible)
-        AND deleted_at IS NULL
-        AND name ILIKE ${'%' + term + '%'}
-      ORDER BY updated_at DESC
-      LIMIT 50
-    `)
-    rows = Array.isArray(res) ? res : res.rows || []
+      // seluruh pohon yang bisa kuakses: milikku + share langsung + file bucket bersama + turunannya
+      const res: any = await db.execute(sql`
+        WITH RECURSIVE accessible AS (
+          SELECT id FROM files WHERE owner_id = ${me} ${teamFilter}
+          UNION
+          SELECT file_id FROM file_shares WHERE shared_with_id = ${me}
+          UNION
+          SELECT f.id FROM files f JOIN accessible a ON f.parent_id = a.id
+        )
+        SELECT id, name, is_folder AS "isFolder", size, mime_type AS "mimeType", starred,
+               parent_id AS "parentId", owner_id AS "ownerId", deleted_at AS "deletedAt",
+               updated_at AS "updatedAt"
+        FROM files
+        WHERE id IN (SELECT id FROM accessible)
+          AND deleted_at IS NULL
+          AND name ILIKE ${'%' + term + '%'}
+        ORDER BY updated_at DESC
+        LIMIT 50
+      `)
+      rows = Array.isArray(res) ? res : res.rows || []
+    }
   } else {
     throw createError({ statusCode: 400, message: 'View tidak dikenal' })
   }

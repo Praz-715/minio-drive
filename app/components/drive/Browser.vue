@@ -3,6 +3,7 @@ const props = defineProps<{
   mode: 'browse' | 'recent' | 'starred' | 'trash' | 'search'
   parent?: string
   team?: string
+  owner?: string // super admin: jelajah root Drive pribadi user lain
   q?: string
 }>()
 
@@ -18,6 +19,7 @@ const apiUrl = computed(() => {
   if (props.mode === 'browse') {
     if (props.parent) return `/api/drive/browse?parent=${encodeURIComponent(props.parent)}`
     if (props.team) return `/api/drive/browse?team=${encodeURIComponent(props.team)}`
+    if (props.owner) return `/api/drive/browse?owner=${encodeURIComponent(props.owner)}`
     return '/api/drive/browse'
   }
   return `/api/drive/special?view=${props.mode}&q=${encodeURIComponent(props.q || '')}`
@@ -27,10 +29,11 @@ const { data, refresh, status } = useFetch(apiUrl, { server: false })
 const items = computed<any[]>(() => (data.value as any)?.items || [])
 const folder = computed(() => (props.mode === 'browse' ? (data.value as any)?.folder : null))
 const teamRoot = computed(() => (props.mode === 'browse' ? (data.value as any)?.team : null))
+const ownerRoot = computed(() => (props.mode === 'browse' ? (data.value as any)?.ownerRoot : null))
 const crumbs = computed(() => (props.mode === 'browse' ? (data.value as any)?.crumbs || [] : []))
 const access = computed(() => (props.mode === 'browse' ? (data.value as any)?.access || null : null))
 const canWrite = computed(() => props.mode === 'browse' && ['owner', 'editor'].includes(access.value))
-const isPersonalRoot = computed(() => props.mode === 'browse' && !props.parent && !props.team)
+const isPersonalRoot = computed(() => props.mode === 'browse' && !props.parent && !props.team && !props.owner)
 
 const TITLES: Record<string, string> = {
   recent: 'Terbaru',
@@ -42,16 +45,18 @@ const title = computed(() => {
   if (props.mode !== 'browse') return TITLES[props.mode]
   if (folder.value) return folder.value.name
   if (teamRoot.value) return teamRoot.value.name
+  if (ownerRoot.value) return `Drive: ${ownerRoot.value.name}`
   return 'Drive Saya'
 })
 
-// beritahu layout: lokasi aktif & boleh upload atau tidak
+// beritahu layout: lokasi aktif & boleh upload atau tidak.
+// mode owner (super lihat drive user lain) = read-only dari sisi UI → no upload.
 watch(
-  [data, () => props.parent, () => props.team],
+  [data, () => props.parent, () => props.team, () => props.owner],
   () => {
     ctx.value = {
       parent: props.parent || '',
-      canUpload: isPersonalRoot.value || canWrite.value,
+      canUpload: !props.owner && (isPersonalRoot.value || canWrite.value),
       label: title.value || '',
     }
   },
@@ -395,6 +400,7 @@ async function onMoved() {
           </template>
         </div>
         <span v-else-if="teamRoot" class="inline-flex badge-ok mb-1">bucket bersama</span>
+        <span v-else-if="ownerRoot" class="inline-flex badge-ok mb-1">akses super admin · drive user lain</span>
         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight truncate">{{ title }}</h1>
       </div>
       <div class="flex items-center gap-2">

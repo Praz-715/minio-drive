@@ -11,6 +11,12 @@ async function isAdmin(userId: string): Promise<boolean> {
   return isAdminRole(u?.role)
 }
 
+async function isSuperAdmin(userId: string): Promise<boolean> {
+  const db = useDriveDb()
+  const [u] = await db.select({ role: user.role }).from(user).where(eq(user.id, userId)).limit(1)
+  return isSuperAdminRole(u?.role)
+}
+
 /** Izin user pada sebuah bucket bersama. */
 export async function teamAccess(userId: string, bucketId: string): Promise<DriveAccess | null> {
   if (await isAdmin(userId)) return 'owner'
@@ -36,6 +42,9 @@ export async function fileAccess(
   const db = useDriveDb()
   const [f] = await db.select().from(files).where(eq(files.id, fileId)).limit(1)
   if (!f) return { file: null, access: null }
+
+  // super admin = akses penuh (owner) ke SEMUA file, termasuk Drive pribadi user lain
+  if (await isSuperAdmin(userId)) return { file: f, access: 'owner' }
 
   if (f.teamBucketId) {
     if (f.ownerId === userId) return { file: f, access: 'owner' }

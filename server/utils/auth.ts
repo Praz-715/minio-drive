@@ -15,14 +15,6 @@ let _auth: ReturnType<typeof betterAuth> | null = null
 export function useServerAuth() {
   if (_auth) return _auth
 
-  const parseEmails = (v?: string) =>
-    (v || '')
-      .split(',')
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean)
-  const adminEmails = parseEmails(process.env.ADMIN_EMAILS)
-  const superAdminEmails = parseEmails(process.env.SUPER_ADMIN_EMAILS)
-
   const baseUrl = process.env.BETTER_AUTH_URL
   const isProd = process.env.NODE_ENV === 'production'
 
@@ -56,19 +48,9 @@ export function useServerAuth() {
       },
     },
     databaseHooks: {
-      user: {
-        create: {
-          before: async (user) => {
-            const email = user.email.toLowerCase()
-            const role = superAdminEmails.includes(email)
-              ? 'super_admin'
-              : adminEmails.includes(email)
-                ? 'admin'
-                : 'user'
-            return { data: { ...user, role } }
-          },
-        },
-      },
+      // Role TIDAK diatur dari env. User baru selalu 'user'; role dikelola
+      // sepenuhnya di DB lewat UI Kelola User (super admin). Bootstrap super
+      // admin pertama ditangani server/plugins/seed-roles.ts.
       session: {
         create: {
           // user yang di-soft-delete tidak boleh login lagi

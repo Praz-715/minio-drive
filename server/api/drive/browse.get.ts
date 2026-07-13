@@ -1,11 +1,12 @@
 import { and, asc, desc, eq, isNull } from 'drizzle-orm'
-import { files, teamBuckets } from '../../db/schema'
+import { files, teamBuckets, user } from '../../db/schema'
 
 /**
  * Isi sebuah lokasi:
  *  - tanpa param        → root Drive Saya (file pribadi, parent null)
  *  - ?team={id}         → root bucket bersama
  *  - ?parent={folderId} → isi folder (pribadi maupun tim)
+ *  - ?owner={userId}    → root Drive pribadi user lain (KHUSUS super admin)
  */
 export default defineEventHandler(async (event) => {
   const session = await requireDriveSession(event)
@@ -13,12 +14,14 @@ export default defineEventHandler(async (event) => {
   const q = getQuery(event)
   const parent = String(q.parent || '')
   const team = String(q.team || '')
+  const owner = String(q.owner || '')
   const db = useDriveDb()
 
   let folder: any = null
   let access: DriveAccess = 'owner'
   let crumbs: { id: string; name: string }[] = []
   let teamInfo: any = null
+  let ownerRoot: { id: string; name: string } | null = null
   let rows: any[]
 
   if (parent) {
@@ -49,6 +52,20 @@ export default defineEventHandler(async (event) => {
       .from(files)
       .where(and(eq(files.teamBucketId, team), isNull(files.parentId), isNull(files.deletedAt)))
       .orderBy(desc(files.isFolder), asc(files.name))
+  } else if (owner) {
+    // super admin melihat root Drive pribadi user lain (god-mode)
+    if (!isSuperAdminRole((session.user as any).role)) {
+      throw createError({ statusCode: 403, message: 'Khusus super admin' })
+    }
+    const [ou] = await db.select({ id: user.id, name: user.name }).from(user).where(eq(user.id, owner)).limit(1)
+    if (!ou) throw createError({ statusCode: 404, message: 'User tidak ditemukan' })
+    ownerRoot = { id: ou.id, name: ou.name }
+    access = 'owner'
+    rows = await db
+      .select()
+      .from(files)
+      .where(and(eq(files.ownerId, owner), isNull(files.parentId), isNull(files.teamBucketId), isNull(files.deletedAt)))
+      .orderBy(desc(files.isFolder), asc(files.name))
   } else {
     rows = await db
       .select()
@@ -61,6 +78,7 @@ export default defineEventHandler(async (event) => {
   return {
     folder: folder ? { id: folder.id, name: folder.name, ownerId: folder.ownerId, teamBucketId: folder.teamBucketId } : null,
     team: teamInfo,
+    ownerRoot,
     access,
     crumbs,
     items: rows.map((r) => toItem(r, owners[r.ownerId])),
