@@ -384,7 +384,7 @@ useHead({
 
     <footer class="shrink-0 py-4 text-center">
       <p class="font-mono text-[11px] text-ink-500">
-        Dibagikan lewat <NuxtLink to="/" class="text-glow hover:underline">Yasa Drive</NuxtLink>
+        Dibagikan lewat <NuxtLink to="/" class="text-glow hover:underline">Office Drive</NuxtLink>
       </p>
     </footer>
   </div>

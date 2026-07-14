@@ -58,7 +58,7 @@ async function submit() {
       <form class="card p-6 space-y-4 rise" style="animation-delay: 90ms" @submit.prevent="submit">
         <div>
           <label class="label" for="ak">Access Key</label>
-          <input id="ak" v-model="accessKey" class="input" autocomplete="username" spellcheck="false" placeholder="mis. tegwa-admin" />
+          <input id="ak" v-model="accessKey" class="input" autocomplete="username" spellcheck="false" placeholder="" />
         </div>
         <div>
           <label class="label" for="sk">Secret Key</label>
@@ -71,7 +71,7 @@ async function submit() {
       </form>
 
       <p class="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-ink-500 rise" style="animation-delay: 180ms">
-        self-hosted · s3 compatible · yasatech
+        Store Freely
       </p>
     </div>
   </div>

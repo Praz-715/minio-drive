@@ -52,7 +52,7 @@ const features = [
       <!-- ============ HERO ============ -->
       <div class="text-center lg:text-left">
         <div class="rise inline-flex">
-          <BrandMark size="lg" subtitle="self-hosted storage · yasatech" />
+          <BrandMark size="lg" subtitle="Store Freely" />
         </div>
 
         <h2
@@ -85,7 +85,7 @@ const features = [
           </div>
           <div>
             <label class="label" for="email">Email</label>
-            <input id="email" v-model="email" type="email" class="input" autocomplete="email" placeholder="nama@yasatech.co.id" />
+            <input id="email" v-model="email" type="email" class="input" autocomplete="email" placeholder="nama@mail.co.id" />
           </div>
           <div>
             <label class="label" for="password">Password</label>

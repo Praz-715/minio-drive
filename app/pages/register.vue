@@ -58,7 +58,7 @@ async function submit() {
         </div>
         <div>
           <label class="label" for="email">Email</label>
-          <input id="email" v-model="email" type="email" class="input" autocomplete="email" placeholder="nama@yasatech.co.id" />
+          <input id="email" v-model="email" type="email" class="input" autocomplete="email" placeholder="nama@mail.co.id" />
         </div>
         <div>
           <label class="label" for="password">Password</label>

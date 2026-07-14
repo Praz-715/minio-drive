@@ -224,7 +224,7 @@ async function restore(u: any) {
         </div>
         <div>
           <label class="label">Email</label>
-          <input v-model="addForm.email" type="email" class="input" placeholder="nama@yasatech.co.id" spellcheck="false" />
+          <input v-model="addForm.email" type="email" class="input" placeholder="nama@mail.co.id" spellcheck="false" />
         </div>
         <div>
           <label class="label">Password</label>
