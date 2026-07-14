@@ -12,6 +12,9 @@ export default defineEventHandler(async (event) => {
       try {
         const { file, access } = await fileAccess(session.user.id, id)
         if (!file || !access || file.isFolder || !file.objectKey) return
+        // file di sampah: tetap boleh untuk PEMILIK (thumbnail grid Sampah), tapi
+        // JANGAN untuk penerima share (akses lewat share tak berlaku setelah di-trash)
+        if (file.deletedAt && file.ownerId !== session.user.id) return
         const bucket = await bucketForFile(file)
         if (!bucket) return
         urls[id] = await client.presignedGetObject(bucket, file.objectKey, 3600, {

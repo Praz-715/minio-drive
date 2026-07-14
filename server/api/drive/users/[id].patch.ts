@@ -39,7 +39,12 @@ export default defineEventHandler(async (event) => {
     } else {
       role = 'user'
     }
-    // jangan sampai menurunkan role akun sendiri di bawah admin (biar tidak lock-out)
+    // super admin TIDAK boleh menurunkan role akun sendiri dari super_admin
+    // (anti lock-out: jaga selalu ada minimal 1 super admin di sistem)
+    if (id === session.user.id && iamSuper && role !== 'super_admin') {
+      throw createError({ statusCode: 400, message: 'Super admin tidak bisa menurunkan role akun sendiri' })
+    }
+    // admin/user: jangan menurunkan role akun sendiri di bawah admin
     if (id === session.user.id && !isAdminRole(role)) {
       throw createError({ statusCode: 400, message: 'Tidak bisa menurunkan role akun sendiri' })
     }

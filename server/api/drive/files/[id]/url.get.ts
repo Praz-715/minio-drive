@@ -8,6 +8,8 @@ export default defineEventHandler(async (event) => {
 
   const { file } = await requireFileAccess(session.user.id, id, 'viewer')
   if (file.isFolder || !file.objectKey) throw createError({ statusCode: 400, message: 'Bukan file' })
+  // file di sampah tidak boleh diunduh walau baris share-nya masih ada
+  if (file.deletedAt) throw createError({ statusCode: 404, message: 'File ada di sampah' })
 
   const bucket = await bucketForFile(file)
   if (!bucket) throw createError({ statusCode: 500, message: 'Bucket tidak ditemukan' })

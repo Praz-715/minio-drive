@@ -548,7 +548,7 @@ async function onMoved() {
           <button v-if="isOwner(menuFor)" class="btn-ghost justify-start" @click="toggleStar(menuFor)">
             {{ menuFor?.starred ? '☆ Hapus bintang' : '★ Beri bintang' }}
           </button>
-          <button class="btn-ghost justify-start" @click="startRename(menuFor)">✎ Ganti nama</button>
+          <button v-if="!owner && (isOwner(menuFor) || canWrite)" class="btn-ghost justify-start" @click="startRename(menuFor)">✎ Ganti nama</button>
           <button v-if="isOwner(menuFor) || canWrite" class="btn-ghost justify-start" :disabled="copying" @click="copyItem(menuFor)">
             {{ copying ? '⧉ Menyalin…' : '⧉ Buat Salinan' }}
           </button>

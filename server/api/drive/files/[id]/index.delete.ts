@@ -33,14 +33,24 @@ export default defineEventHandler(async (event) => {
     return { ok: true, trashed: true }
   }
 
-  // kumpulkan seluruh turunan (BFS)
-  const all: any[] = [file]
-  let frontier = [file.id]
-  for (let depth = 0; depth < 32 && frontier.length; depth++) {
-    const children = await db.select().from(files).where(inArray(files.parentId, frontier))
-    all.push(...children)
-    frontier = children.filter((c) => c.isFolder).map((c) => c.id)
-  }
+  // Kumpulkan SELURUH turunan lewat recursive CTE — TANPA batas kedalaman.
+  // Penting: files.parentId ON DELETE CASCADE menghapus semua baris turunan di DB,
+  // jadi objek MinIO & kuota WAJIB diproses untuk seluruh subtree; kalau cuma
+  // sebagian (mis. dibatasi 32 level), baris lebih dalam kehapus tapi objeknya
+  // nyangkut selamanya + storageUsed melenceng permanen.
+  const res: any = await db.execute(sql`
+    WITH RECURSIVE subtree AS (
+      SELECT id, owner_id, team_bucket_id, object_key, is_folder, size
+      FROM files WHERE id = ${id}
+      UNION ALL
+      SELECT f.id, f.owner_id, f.team_bucket_id, f.object_key, f.is_folder, f.size
+      FROM files f JOIN subtree s ON f.parent_id = s.id
+    )
+    SELECT id, owner_id AS "ownerId", team_bucket_id AS "teamBucketId",
+           object_key AS "objectKey", is_folder AS "isFolder", size
+    FROM subtree
+  `)
+  const all: any[] = Array.isArray(res) ? res : res.rows || []
 
   // hapus objek MinIO + kembalikan kuota (hanya file pribadi yang punya counter DB)
   const client = driveMinio()
@@ -49,7 +59,8 @@ export default defineEventHandler(async (event) => {
     if (f.isFolder || !f.objectKey) continue
     const bucket = await bucketForFile(f)
     if (bucket) await client.removeObject(bucket, f.objectKey).catch(() => {})
-    if (!f.teamBucketId) freed[f.ownerId] = (freed[f.ownerId] || 0) + f.size
+    // size dari db.execute bisa berupa string (bigint) → koersi ke number
+    if (!f.teamBucketId) freed[f.ownerId] = (freed[f.ownerId] || 0) + (Number(f.size) || 0)
   }
 
   await db.delete(files).where(inArray(files.id, all.map((f) => f.id)))
