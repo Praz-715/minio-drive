@@ -23,8 +23,12 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'Yasa Console — Object Storage',
-      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }],
+      title: 'Yasa Drive',
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        { name: 'theme-color', media: '(prefers-color-scheme: light)', content: '#f4f5f7' },
+        { name: 'theme-color', media: '(prefers-color-scheme: dark)', content: '#13161d' },
+      ],
       script: [
         {
           // set tema sebelum paint supaya tidak flash
@@ -39,6 +43,12 @@ export default defineNuxtConfig({
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap',
         },
+        // favicon (di-generate dari twemoji 🗃️) — file di /public
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
+        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' },
       ],
     },
   },
