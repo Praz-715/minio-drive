@@ -2,7 +2,7 @@
 
 > Dokumen serah-terima state proyek. Dibuat 8 Jul 2026 · **terakhir diupdate 14 Jul 2026**. Baca ini dulu sebelum lanjut ngoding.
 >
-> ⚡ **State TERBARU ada di §17** (sesi 13–14 Jul: share publik folder, auto-claim, RBAC super_admin/god-mode, editor-link, dll). Kalau §17 bentrok dengan bagian lama, **§17 yang benar**. Domain sekarang **savgroup.my.id** (bukan tegwa). HEAD: commit `3963184`.
+> ⚡ **State TERBARU ada di §18** (sesi 14 Jul lanjutan: audit keamanan + 5 fix, logging ke file, overhaul responsive, tombol Detail file, branding kustom super admin + caching, favicon/manifest). §17 = update besar sebelumnya (share publik folder, RBAC super_admin/god-mode). Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id**. HEAD: commit `29c0813`.
 
 ## 1. Apa ini
 
@@ -248,3 +248,66 @@ Melengkapi `/s/[token]` biar setara Google Drive:
 3. **Bind app ke `127.0.0.1`** (masih `0.0.0.0:3000`) + tutup port 3000 dari luar (semua lewat CF).
 4. Pastikan `.env` server `NUXT_MINIO_ENDPOINT` eksplisit `https://s3.savgroup.my.id` (kode sudah normalisasi, tapi eksplisit lebih rapi).
 5. Rekomendasi lama (§15) yang masih relevan: `disableSignUp`/verifikasi email kalau internal, avatar belum dihitung di `storageUsed`, GC objek orphan saat move.
+
+## 18. Sesi 14 Jul 2026 (lanjutan) — audit fix, logging, responsive, Detail, branding, favicon
+
+> State **TERBARU**. HEAD: commit **`29c0813`** (branch `main`, repo `Praz-715/minio-drive`). Semua sudah di-commit & push, dan diverifikasi live (playwright + curl) di dev server (localhost:3000).
+
+### 18.0 Urutan commit sesi ini
+`54e3252` audit-fix → `149aed2` file-logger → `80ed3a1` env log → `e679e20` responsive → `5b8744c` Detail+mobile → `6ad840e` branding → `8a2955d` branding-cache → `29c0813` favicon.
+
+### 18.1 Audit keamanan + 5 fix (commit `54e3252`)
+Audit menyeluruh (5 reviewer paralel) atas semua endpoint & util. Verdict: **tak ada bypass auth kritis**; model izin inti solid. 5 temuan **medium diperbaiki + cross-check tanpa bentrok**:
+1. **Super admin tak bisa turunkan role akun sendiri** dari super_admin — anti lock-out (`users/[id].patch.ts`: guard `iamSuper && role !== 'super_admin'`). UI `users.vue` memang sudah men-disable dropdown role utk diri sendiri.
+2. **PATCH `/files/[id]` tolak body tanpa field ter-guard** — dulu body `{}` bikin `db.update` jalan tanpa cek akses (IDOR bump `updatedAt` file siapa pun). Sekarang butuh minimal `name`/`starred`, else 400.
+3. **File di sampah tak bisa di-presign** — `files/[id]/url.get.ts` tolak `deletedAt` (404); `urls-batch.post.ts` skip trashed **kecuali milik sendiri** (biar thumbnail grid Sampah pemilik tetap jalan; trash view cuma nampilin item sendiri). Cegah penerima share download file yang sudah di-trash.
+4. **Hapus permanen pakai recursive CTE** (bukan BFS batas 32 level) — `files.parentId` `ON DELETE CASCADE` menghapus SEMUA baris turunan, jadi objek MinIO + kuota harus diproses utk seluruh subtree; sebelumnya baris >32 level kehapus tapi objek nyangkut + `storageUsed` melenceng permanen. Ada koersi `size` bigint→number.
+5. **Tombol "Ganti nama" di-guard** (`Browser.vue`): `v-if="!owner && (isOwner || canWrite)"` → hilang di view god-mode `?owner` (read-only) & utk viewer.
+
+Temuan LOW yang **belum** ditambal (bukan blocker): rate-limit link password in-memory/per-token (DoS), Content-Disposition nama file belum di-escape, bootstrap `seed-roles` masih hitung super yang soft-deleted, guard super_admin di `restore`/`avatar` user, dsb.
+
+### 18.2 Logging ke file (commit `149aed2`, `80ed3a1`)
+`server/plugins/file-logger.ts` — Nitro plugin nulis ke file: `[boot]`, tiap request non-aset (`METHOD path → status (ms)`), `error` handler Nitro (500/throw), + `unhandledRejection`/`uncaughtException` (log lalu `exit(1)` biar systemd restart). Path via env **`NUXT_LOG_FILE`** (default `/tmp/yasa-drive.log` di Linux; **nonaktif di Windows** kecuali di-set → gak ganggu `npm run dev`). `.env.example` didokumentasikan; `.env` server pakai `/var/log/yasa-drive.log`. Lihat: `tail -f /var/log/yasa-drive.log`.
+> ⚠️ `/var/log` punya root → file harus disiapkan: `sudo touch /var/log/yasa-drive.log && sudo chown user1:user1 /var/log/yasa-drive.log` (ganti user sesuai `systemctl show yasa-drive -p User`). Kalau `[boot]` tak muncul, hampir pasti izin tulis.
+
+### 18.3 Overhaul responsive (commit `e679e20`, 19 file)
+Cross-check semua front-end (5 reviewer) → tambal + verifikasi visual playwright @ **390 / 820 / 1440**. Tak ada breakage besar; ini poles. Fix: **Modal.vue** judul panjang `truncate`; **Toasts.vue** diangkat di atas FAB pas mobile; **MoveModal** label `truncate`; **s/[token]** header folder `truncate`; tabel list (Browser, drive `users`/`buckets`, `shared-with-me`) pakai **`table-fixed`** + sembunyikan kolom sekunder di mobile; cluster touch-target `<36px` dinaikkan (`h-8→h-9`, tombol `⋯`, dll — termasuk tabel aksi Console via `[&>button]`); layout: nama tim `truncate`, `<main>` `pb-24 lg:pb-6` (konten tak ketutup FAB), endpoint console `min-w-0`, angka "Objects" `text-2xl sm:text-3xl`.
+
+### 18.4 Action bar mobile + kolom list + tombol Detail (commit `5b8744c`)
+- **Action bar multi-select** (Download/Pindahkan/Sampah, + Pulihkan/Hapus di Sampah): **icon-only di mobile** (h-8, 1 baris), label balik di `sm+`.
+- **List mobile**: kolom Ukuran juga disembunyikan → cuma Nama (panjang).
+- **Tombol "Detail" di menu `⋯` (KHUSUS file, bukan folder)** → `app/components/drive/DetailModal.vue`: tipe (mime), lokasi (breadcrumb), ukuran, dibuat, diubah, pemilik, **akses** (daftar yang dibagikan + status link publik; "belum dibagikan" bila kosong; utk non-pemilik: "dibagikan ke kamu" / info bucket bersama). Endpoint baru **`GET /api/drive/files/[id]/detail`** (akses viewer+; daftar share hanya utk pemilik item pribadi).
+
+### 18.5 Branding kustom — nama & logo (super admin) (commit `6ad840e`)
+- Menu **"🎨 Edit Nama & Logo"** di dropdown profil layout drive — **KHUSUS super admin** (`v-if isSuperAdmin` + server `requireDriveSuperAdmin`).
+- Modal (`app/components/drive/BrandingModal.vue`) 2 mode: **Bawaan** (logo "Y" + "YASA DRIVE") / **Kustom** (nama + upload logo ≤300KB → data URI, ada pratinjau).
+- **Berlaku global**: halaman login `/`, sidebar `/drive`, `/register`, & link publik `/s` — semua render lewat komponen **`app/components/BrandMark.vue`** (baca `useBranding`). Di-hydrate SSR (tanpa flash) via `app/plugins/branding.ts`; update **reaktif seketika** setelah simpan (useState).
+- **DB**: tabel baru **`app_settings`** (1 baris `id='app'`: `app_name`, `logo`, `updated_at`) — schema `server/db/schema/settings.ts`, **migrasi `0003_furry_changeling.sql`**. Endpoint `POST /api/branding` (super only, validasi ukuran).
+- Console (`/console`) **TIDAK** ikut (di luar scope, tetap "YASA").
+
+### 18.6 Branding caching — logo via endpoint gambar (commit `8a2955d`)
+Optimasi supaya logo tak di-embed base64 di tiap payload & tak query DB tiap render:
+- `server/utils/branding.ts`: **cache branding di memori** (invalidate saat `POST`). ⚠️ **per-proses** — aman utk 1 instance (systemd); kalau scale multi-instance nanti kasih TTL pendek.
+- **`GET /api/branding`** (publik) kini cuma **metadata ringan** `{ appName, hasLogo, logoVersion }` (tanpa data URI).
+- **`GET /api/branding/logo`** (publik) serve logo sebagai **gambar** dengan `Cache-Control: public, max-age=31536000, immutable` → **browser cache**; cache-bust via `?v=<logoVersion>` (= epoch `updatedAt`) saat logo diganti.
+- **`GET /api/branding/edit`** (super only) → data URI penuh, cuma buat prefill modal.
+- `BrandMark` pakai `<img src="/api/branding/logo?v=...">`.
+
+### 18.7 Favicon + web manifest (commit `29c0813`)
+- Aset favicon (twemoji 🗃️) dipindah dari `app/public/` (TIDAK dilayani di Nuxt 4) ke **`public/` di ROOT project** (baru ke-serve). **Gotcha Nuxt 4**: `public/` & `server/` di root, bukan di `app/`.
+- `nuxt.config.ts` head: link favicon (`.ico` + 16/32 png) + `apple-touch-icon` + `manifest`; meta `theme-color` (light `#f4f5f7` / dark `#13161d`); **title default** jadi `Drive` (dari "Yasa Console — Object Storage"; sempat "Yasa Drive" lalu diedit user jadi "Drive").
+- `public/site.webmanifest` diisi name/short_name + warna `#13161d`.
+- Favicon = **statis** (identitas tab), beda dari **logo in-app** (§18.5) yang bisa dikustom.
+
+### 18.8 Fakta operasional penting (BACA sebelum migrate/test)
+- ⚠️ **DB dev = DB server (Postgres yang SAMA)**: `.env` dev `DATABASE_URL=...@192.168.1.111:5432/drive`, server `...@localhost:5432/drive` → instance & db yang sama. Jadi **`db:migrate`/test dari lokal LANGSUNG kena DB produksi**. Aman utk migrasi additive; hati-hati kalau ada migrasi destruktif.
+- **Migrasi `0003` (app_settings) SUDAH di-apply** ke DB (dari lokal, disetujui user) → `npm run db:migrate` di server bakal **no-op** (tabel ada + tercatat). Deploy tetap `git pull && npm run build && sudo systemctl restart yasa-drive` (migrate opsional).
+- **Akun tes** (dev, DB dipakai bareng): `teguh.prasetyo@yasatech.co.id` / `teguh123` = **super_admin** (naik dari admin di §17), `ichsan@yasatech.co.id` / `P@ssw0rd` = user biasa, `admin@yasatech.co.id` = super_admin (bootstrap owner). > Password akun asli JANGAN ditulis permanen; ini catatan sementara sesi dev.
+- **Dev server** di-restart sesi ini (Nuxt **4.4.8**, :3000) karena ubah `nuxt.config` + tambah `public/`. Restart wajib tiap ubah `nuxt.config`/`public`.
+- `app/public/` (lokasi lama favicon) sudah kosong/pindah — jangan taruh aset statis di situ lagi.
+
+### 18.9 ⚠️ Outstanding (masih sama, belum berubah)
+1. 🔐 **ROTASI SECRET bocor** (MinIO root `P@ssw0rd123!!!` + DB `Asdf123456`, ke-commit di history `c7a7e4c`) — **PALING KRITIS, BELUM.**
+2. Service account MinIO khusus (masih root `minio-admin`).
+3. Bind app ke `127.0.0.1` (masih `0.0.0.0:3000`) + tutup port 3000 dari luar.
+4. (Baru, minor) branding cache per-proses → kasih TTL kalau multi-instance; LOW audit §18.1 (rate-limit link, escape Content-Disposition, guard restore/avatar super).
