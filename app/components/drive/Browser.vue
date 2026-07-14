@@ -427,13 +427,13 @@ async function onMoved() {
         <span class="font-mono text-xs text-ink-200">{{ selected.size }} dipilih</span>
         <div class="flex-1" />
         <template v-if="mode === 'trash'">
-          <button class="btn-ghost h-8 text-xs" :disabled="bulkBusy" @click="bulkRestore">↩ Pulihkan</button>
-          <button class="btn-danger h-8 text-xs" :disabled="bulkBusy" @click="confirmBulkPermanent = true">🗑 Hapus permanen</button>
+          <button class="btn-ghost h-9 text-xs" :disabled="bulkBusy" @click="bulkRestore">↩ Pulihkan</button>
+          <button class="btn-danger h-9 text-xs" :disabled="bulkBusy" @click="confirmBulkPermanent = true">🗑 Hapus permanen</button>
         </template>
         <template v-else>
-          <button class="btn-ghost h-8 text-xs" :disabled="!selHasFiles || bulkBusy" @click="bulkDownload">↓ Download</button>
-          <button class="btn-ghost h-8 text-xs" :disabled="!selAllOwned || bulkBusy" :title="selAllOwned ? '' : 'ada item yang bukan milikmu'" @click="moveTargets = [...selItems]">⇄ Pindahkan</button>
-          <button class="btn-danger h-8 text-xs" :disabled="!selAllOwned || bulkBusy" :title="selAllOwned ? '' : 'ada item yang bukan milikmu'" @click="bulkTrash">🗑 Sampah</button>
+          <button class="btn-ghost h-9 text-xs" :disabled="!selHasFiles || bulkBusy" @click="bulkDownload">↓ Download</button>
+          <button class="btn-ghost h-9 text-xs" :disabled="!selAllOwned || bulkBusy" :title="selAllOwned ? '' : 'ada item yang bukan milikmu'" @click="moveTargets = [...selItems]">⇄ Pindahkan</button>
+          <button class="btn-danger h-9 text-xs" :disabled="!selAllOwned || bulkBusy" :title="selAllOwned ? '' : 'ada item yang bukan milikmu'" @click="bulkTrash">🗑 Sampah</button>
         </template>
       </div>
     </Transition>
@@ -458,7 +458,7 @@ async function onMoved() {
               <input type="checkbox" class="size-4 accent-glow cursor-pointer align-middle" :checked="selected.has(o.id)" @change="toggleSel(o.id)" />
             </label>
             <button
-              class="absolute top-2 right-2 z-10 rounded bg-ink-950/80 border border-ink-600 px-2 py-0.5 font-mono text-[11px] text-ink-300 hover:text-glow row-actions cursor-pointer"
+              class="absolute top-2 right-2 z-10 rounded bg-ink-950/80 border border-ink-600 inline-flex items-center justify-center size-7 font-mono text-[11px] text-ink-300 hover:text-glow row-actions cursor-pointer"
               @click.stop="menuFor = o"
             >⋯</button>
             <button class="block w-full text-left cursor-pointer" @click="openItem(o)">
@@ -487,7 +487,7 @@ async function onMoved() {
 
     <!-- ============ LIST ============ -->
     <div v-else class="card overflow-x-auto rise">
-      <table class="tbl">
+      <table class="tbl table-fixed">
         <thead>
           <tr>
             <th class="w-10">
@@ -524,7 +524,7 @@ async function onMoved() {
               <td class="font-mono text-xs text-ink-300">{{ o.isFolder ? '—' : fmtBytes(o.size) }}</td>
               <td class="font-mono text-xs text-ink-300 hidden md:table-cell">{{ fmtDate(mode === 'trash' ? o.deletedAt : o.updatedAt) }}</td>
               <td class="text-right">
-                <button class="row-actions text-ink-400 hover:text-glow font-mono cursor-pointer px-1" @click="menuFor = o">⋯</button>
+                <button class="row-actions text-ink-400 hover:text-glow font-mono cursor-pointer inline-flex items-center justify-center min-w-9 h-9" @click="menuFor = o">⋯</button>
               </td>
             </tr>
             <tr v-if="!items.length">

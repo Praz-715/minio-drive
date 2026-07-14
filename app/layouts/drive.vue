@@ -184,8 +184,8 @@ const nav = computed(() => [
             class="flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-colors truncate"
             :class="route.path === `/drive/team/${t.id}` ? 'text-glow' : 'text-ink-400 hover:text-ink-100'"
           >
-            <span class="font-mono text-[10px]">▦</span>
-            <span class="truncate">{{ t.name }}</span>
+            <span class="font-mono text-[10px] shrink-0">▦</span>
+            <span class="truncate flex-1 min-w-0">{{ t.name }}</span>
           </NuxtLink>
         </div>
 
@@ -310,7 +310,7 @@ const nav = computed(() => [
         </div>
       </header>
 
-      <main class="flex-1 p-4 sm:p-6">
+      <main class="flex-1 p-4 sm:p-6 pb-24 lg:pb-6">
         <slot />
       </main>
     </div>

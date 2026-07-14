@@ -161,8 +161,8 @@ async function moveHere() {
 
       <div class="flex justify-end gap-2">
         <button class="btn-ghost" @click="emit('close')">Batal</button>
-        <button class="btn-primary" :disabled="busy || !scope || sameSpot" @click="moveHere">
-          {{ busy ? 'Memindahkan…' : `Pindahkan ke ${destName || '…'}` }}
+        <button class="btn-primary min-w-0" :disabled="busy || !scope || sameSpot" @click="moveHere">
+          <span class="truncate min-w-0">{{ busy ? 'Memindahkan…' : `Pindahkan ke ${destName || '…'}` }}</span>
         </button>
       </div>
     </div>

@@ -106,7 +106,7 @@ async function deletePolicy() {
               </span>
             </td>
             <td>
-              <div class="flex justify-end gap-3 font-mono text-xs row-actions">
+              <div class="flex justify-end gap-3 font-mono text-xs row-actions [&>button]:py-2.5 [&>button]:-my-2.5 [&>button]:inline-flex [&>button]:items-center">
                 <button class="text-ink-400 hover:text-glow cursor-pointer" @click="view(p.name)">lihat</button>
                 <button
                   v-if="!BUILTIN.has(p.name)"

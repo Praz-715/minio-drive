@@ -134,12 +134,12 @@ async function deleteBucket() {
       <div>
         <p class="label mb-2">Bucket Bersama</p>
         <div class="card overflow-x-auto rise">
-          <table class="tbl">
+          <table class="tbl table-fixed">
             <thead>
               <tr>
                 <th>Nama</th>
                 <th class="hidden md:table-cell">Bucket</th>
-                <th class="w-40">Terpakai / Quota</th>
+                <th class="w-40 hidden sm:table-cell">Terpakai / Quota</th>
                 <th class="w-24">Anggota</th>
                 <th class="w-32" />
               </tr>
@@ -151,10 +151,10 @@ async function deleteBucket() {
                   <NuxtLink :to="`/drive/team/${t.id}`" class="font-semibold hover:text-glow transition-colors">{{ t.name }}</NuxtLink>
                 </td>
                 <td class="font-mono text-[11px] text-ink-400 hidden md:table-cell">{{ t.bucket }}</td>
-                <td class="font-mono text-xs text-ink-300">{{ fmtBytes(t.used) }} / {{ gib(t.quota) }} GiB</td>
+                <td class="font-mono text-xs text-ink-300 hidden sm:table-cell">{{ fmtBytes(t.used) }} / {{ gib(t.quota) }} GiB</td>
                 <td class="font-mono text-xs text-ink-300">{{ t.members }}</td>
                 <td>
-                  <div class="flex justify-end gap-3 font-mono text-xs row-actions">
+                  <div class="flex justify-end gap-3 font-mono text-xs row-actions [&>button]:py-2.5 [&>button]:-my-2.5 [&>button]:inline-flex [&>button]:items-center">
                     <button class="text-ink-400 hover:text-glow cursor-pointer" @click="openManage(t)">kelola</button>
                     <button class="text-ink-400 hover:text-danger cursor-pointer" @click="confirmDelete = t">hapus</button>
                   </div>
@@ -169,12 +169,12 @@ async function deleteBucket() {
       <div v-if="isSuperAdmin">
         <p class="label mb-2">Bucket Pribadi (per user)</p>
         <div class="card overflow-x-auto rise">
-          <table class="tbl">
+          <table class="tbl table-fixed">
             <thead>
               <tr>
                 <th>Pemilik</th>
                 <th class="hidden md:table-cell">Bucket</th>
-                <th class="w-40">Terpakai / Quota</th>
+                <th class="w-40 hidden sm:table-cell">Terpakai / Quota</th>
                 <th class="w-24">Status</th>
               </tr>
             </thead>
@@ -189,7 +189,7 @@ async function deleteBucket() {
                   <p class="font-mono text-[11px] text-ink-400 truncate">{{ p.ownerEmail }}</p>
                 </td>
                 <td class="font-mono text-[11px] text-ink-400 hidden md:table-cell">{{ p.bucket }}</td>
-                <td class="font-mono text-xs text-ink-300">{{ fmtBytes(p.used) }} / {{ gib(p.quota) }} GiB</td>
+                <td class="font-mono text-xs text-ink-300 hidden sm:table-cell">{{ fmtBytes(p.used) }} / {{ gib(p.quota) }} GiB</td>
                 <td><span :class="p.deletedAt ? 'badge-off' : 'badge-ok'">{{ p.deletedAt ? 'nonaktif' : 'aktif' }}</span></td>
               </tr>
             </tbody>

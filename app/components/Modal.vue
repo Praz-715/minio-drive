@@ -17,9 +17,9 @@ const emit = defineEmits<{ close: [] }>()
         @click.self="emit('close')"
       >
         <div class="card w-full shadow-2xl rise" :class="xl ? 'max-w-4xl' : wide ? 'max-w-2xl' : 'max-w-md'">
-          <div class="flex items-center justify-between px-5 py-4 border-b border-ink-700">
-            <h2 class="font-mono text-[12px] uppercase tracking-[0.2em] text-glow">{{ title }}</h2>
-            <button class="text-ink-400 hover:text-white transition-colors cursor-pointer" @click="emit('close')">✕</button>
+          <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-ink-700">
+            <h2 class="font-mono text-[12px] uppercase tracking-[0.2em] text-glow truncate min-w-0">{{ title }}</h2>
+            <button class="text-ink-400 hover:text-white transition-colors cursor-pointer shrink-0" @click="emit('close')">✕</button>
           </div>
           <div class="p-5">
             <slot />

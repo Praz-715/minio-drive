@@ -40,7 +40,7 @@ async function submit() {
 
 <template>
   <div class="min-h-screen grid-texture flex items-center justify-center p-6 relative overflow-hidden">
-    <button class="btn-ghost absolute top-5 right-5 h-8 px-3 text-xs z-10" title="Ganti tema" @click="toggleTheme()">
+    <button class="btn-ghost absolute top-5 right-5 h-9 px-3 text-xs z-10" title="Ganti tema" @click="toggleTheme()">
       <span class="dark:hidden">☾</span>
       <span class="hidden dark:inline">☀</span>
     </button>

@@ -107,7 +107,7 @@ async function deleteBucket() {
             <td class="font-mono text-xs text-ink-300">{{ fmtDate(b.creationDate) }}</td>
             <td class="text-right">
               <button
-                class="text-ink-500 hover:text-danger transition-colors text-xs font-mono row-actions cursor-pointer"
+                class="text-ink-500 hover:text-danger transition-colors text-xs font-mono row-actions cursor-pointer inline-flex items-center py-2.5 -my-2.5"
                 @click="confirmDelete = b.name"
               >
                 hapus

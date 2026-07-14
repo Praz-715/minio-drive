@@ -131,7 +131,7 @@ async function logout() {
           {{ route.meta.title || '' }}
         </p>
         <div class="flex-1" />
-        <p v-if="meta?.endpoint" class="hidden md:block font-mono text-[11px] text-ink-500 truncate">
+        <p v-if="meta?.endpoint" class="hidden md:block font-mono text-[11px] text-ink-500 truncate min-w-0 max-w-[40ch]">
           <span class="text-ink-400">endpoint</span> <span class="text-ink-200">{{ meta.endpoint }}</span>
         </p>
       </header>

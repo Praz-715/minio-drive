@@ -87,7 +87,7 @@ const distTotal = computed(() =>
         </div>
         <div class="card p-4 rise" style="animation-delay: 40ms">
           <p class="label mb-2">Objects</p>
-          <p class="text-3xl font-extrabold tracking-tight">
+          <p class="text-2xl sm:text-3xl font-extrabold tracking-tight tabular-nums truncate">
             <span v-if="loading" class="inline-block w-12 h-7 rounded bg-ink-700 animate-pulse" />
             <template v-else>{{ info?.objects ?? '—' }}</template>
           </p>

@@ -141,15 +141,15 @@ async function restore(u: any) {
     </div>
 
     <div class="card overflow-x-auto rise" style="animation-delay: 80ms">
-      <table class="tbl">
+      <table class="tbl table-fixed">
         <thead>
           <tr>
             <th>User</th>
             <th>Role</th>
-            <th>Quota</th>
+            <th class="hidden sm:table-cell">Quota</th>
             <th class="hidden md:table-cell">Bucket</th>
-            <th>Status</th>
-            <th class="w-40" />
+            <th class="hidden sm:table-cell">Status</th>
+            <th class="w-24 sm:w-40" />
           </tr>
         </thead>
         <tbody>
@@ -182,17 +182,17 @@ async function restore(u: any) {
                 <template v-if="u.role === 'super_admin'">★ </template>{{ roleLabel(u.role) }}
               </span>
             </td>
-            <td class="font-mono text-xs text-ink-300">
+            <td class="font-mono text-xs text-ink-300 hidden sm:table-cell">
               {{ fmtBytes(u.storageUsed) }} / {{ gib(u.storageQuota) }} GiB
             </td>
             <td class="font-mono text-[11px] text-ink-400 hidden md:table-cell">
               {{ u.bucket ? u.bucket.slice(0, 20) + '…' : '—' }}
             </td>
-            <td>
+            <td class="hidden sm:table-cell">
               <span :class="u.deletedAt ? 'badge-off' : 'badge-ok'">{{ u.deletedAt ? 'nonaktif' : 'aktif' }}</span>
             </td>
             <td>
-              <div class="flex justify-end gap-3 font-mono text-xs row-actions">
+              <div class="flex justify-end gap-3 font-mono text-xs row-actions [&>button]:py-2.5 [&>button]:-my-2.5 [&>button]:inline-flex [&>button]:items-center">
                 <button
                   v-if="iamSuper || u.role !== 'super_admin'"
                   class="text-ink-400 hover:text-glow cursor-pointer"

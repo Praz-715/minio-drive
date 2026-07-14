@@ -139,8 +139,8 @@ async function copyPublic() {
               <p class="text-sm font-semibold truncate">{{ s.name }}</p>
               <p class="font-mono text-[10px] text-ink-400 truncate">{{ s.email }}</p>
             </div>
-            <span class="badge-dim">{{ s.permission }}</span>
-            <button class="text-ink-500 hover:text-danger text-xs font-mono cursor-pointer" @click="revoke(s)">cabut</button>
+            <span class="badge-dim shrink-0">{{ s.permission }}</span>
+            <button class="text-ink-500 hover:text-danger text-xs font-mono cursor-pointer shrink-0 inline-flex items-center h-9 px-1" @click="revoke(s)">cabut</button>
           </div>
         </div>
         <p v-else-if="!loadingShares" class="mt-3 font-mono text-[11px] text-ink-500">belum dibagikan ke siapa pun</p>
@@ -197,8 +197,8 @@ async function copyPublic() {
             <span>{{ link.downloads }}× diunduh</span>
           </div>
           <div class="flex gap-2 mt-3">
-            <button class="btn-ghost h-8 text-xs" :disabled="linkLoading" @click="link = null">Buat ulang</button>
-            <button class="btn-danger h-8 text-xs" :disabled="linkLoading" @click="revokeLink">Cabut link</button>
+            <button class="btn-ghost h-9 text-xs" :disabled="linkLoading" @click="link = null">Buat ulang</button>
+            <button class="btn-danger h-9 text-xs" :disabled="linkLoading" @click="revokeLink">Cabut link</button>
           </div>
         </template>
       </div>

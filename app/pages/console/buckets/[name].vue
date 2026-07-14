@@ -468,7 +468,7 @@ async function deleteSelected() {
               <td class="font-mono text-xs text-ink-300">{{ fmtBytes(o.size) }}</td>
               <td class="font-mono text-xs text-ink-300 hidden md:table-cell">{{ fmtDate(o.lastModified) }}</td>
               <td class="text-right">
-                <div class="flex justify-end gap-3 font-mono text-xs row-actions">
+                <div class="flex justify-end gap-3 font-mono text-xs row-actions [&>button]:py-2.5 [&>button]:-my-2.5 [&>button]:inline-flex [&>button]:items-center">
                   <button class="text-ink-500 hover:text-glow transition-colors cursor-pointer" @click="shareKey = o.name">
                     share
                   </button>

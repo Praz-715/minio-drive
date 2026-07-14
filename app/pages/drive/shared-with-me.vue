@@ -49,9 +49,9 @@ async function leaveShare() {
 
     <template v-else>
       <div v-if="shares.length" class="card overflow-x-auto">
-        <table class="tbl">
+        <table class="tbl table-fixed">
           <thead>
-            <tr><th>Nama</th><th class="w-36 hidden sm:table-cell">Pemilik</th><th class="w-24">Ukuran</th><th class="w-28">Akses kamu</th><th class="w-24" /></tr>
+            <tr><th>Nama</th><th class="w-36 hidden sm:table-cell">Pemilik</th><th class="w-24 hidden sm:table-cell">Ukuran</th><th class="w-28">Akses kamu</th><th class="w-20 sm:w-24" /></tr>
           </thead>
           <tbody>
             <tr v-for="s in shares" :key="s.id" class="group">
@@ -67,13 +67,13 @@ async function leaveShare() {
                 </button>
               </td>
               <td class="text-xs text-ink-300 hidden sm:table-cell truncate">{{ s.ownerName }}</td>
-              <td class="font-mono text-xs text-ink-300">{{ s.isFolder ? '—' : fmtBytes(s.size) }}</td>
+              <td class="font-mono text-xs text-ink-300 hidden sm:table-cell">{{ s.isFolder ? '—' : fmtBytes(s.size) }}</td>
               <td>
                 <span :class="permBadgeClass(s.permission)" :title="s.permission">{{ permLabel(s.permission) }}</span>
               </td>
               <td class="text-right">
                 <button
-                  class="row-actions text-ink-400 hover:text-danger font-mono text-xs cursor-pointer px-1"
+                  class="row-actions text-ink-400 hover:text-danger font-mono text-xs cursor-pointer inline-flex items-center justify-end py-2.5 -my-2.5"
                   title="Lepaskan dari daftar kamu"
                   @click="confirmLeave = s"
                 >lepaskan</button>

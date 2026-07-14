@@ -5,7 +5,7 @@ const { dismiss } = useToast()
 
 <template>
   <Teleport to="body">
-    <div class="fixed right-5 z-[100] flex flex-col gap-2 w-[min(20rem,calc(100vw-2.5rem))] bottom-[max(1.25rem,env(safe-area-inset-bottom))]">
+    <div class="fixed right-5 z-[100] flex flex-col gap-2 w-[min(20rem,calc(100vw-2.5rem))] bottom-[max(5.5rem,env(safe-area-inset-bottom))] lg:bottom-[max(1.25rem,env(safe-area-inset-bottom))]">
       <TransitionGroup
         enter-active-class="transition duration-300"
         enter-from-class="opacity-0 translate-x-6"

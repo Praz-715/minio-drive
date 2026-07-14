@@ -214,7 +214,7 @@ useHead({
         </span>
         <NuxtLink
           :to="claimed.isFolder ? `/drive/folder/${claimed.fileId}` : '/drive/shared-with-me'"
-          class="btn-primary h-8 text-xs shrink-0"
+          class="btn-primary h-9 text-xs shrink-0"
         >Buka di Drive saya</NuxtLink>
       </div>
     </Transition>
@@ -228,8 +228,8 @@ useHead({
         <span class="flex-1 min-w-40 text-ink-300">
           Punya akun? <span class="hidden sm:inline">Login biar {{ meta.isFolder ? 'folder' : 'file' }} ini otomatis nempel di Drive kamu.</span>
         </span>
-        <NuxtLink :to="`/?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-primary h-8 text-xs shrink-0">Login</NuxtLink>
-        <NuxtLink :to="`/register?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-ghost h-8 text-xs shrink-0">Daftar</NuxtLink>
+        <NuxtLink :to="`/?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-primary h-9 text-xs shrink-0">Login</NuxtLink>
+        <NuxtLink :to="`/register?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-ghost h-9 text-xs shrink-0">Daftar</NuxtLink>
       </div>
     </Transition>
 
@@ -269,9 +269,9 @@ useHead({
         <!-- header + breadcrumb -->
         <div class="px-5 py-4 border-b border-ink-800">
           <div class="flex items-center gap-2.5">
-            <span class="text-lg">📁</span>
-            <p class="font-semibold truncate">{{ rootFolder?.name || meta.name }}</p>
-            <span class="badge-ok ml-1">folder publik</span>
+            <span class="text-lg shrink-0">📁</span>
+            <p class="font-semibold truncate min-w-0 flex-1">{{ rootFolder?.name || meta.name }}</p>
+            <span class="badge-ok ml-1 shrink-0">folder publik</span>
           </div>
           <div v-if="crumbs.length > 1" class="flex items-center gap-1.5 font-mono text-xs text-ink-400 flex-wrap mt-2">
             <template v-for="(c, i) in crumbs" :key="c.id">
@@ -304,7 +304,7 @@ useHead({
                 </span>
                 <button
                   v-if="!o.isFolder"
-                  class="text-ink-400 hover:text-glow font-mono text-sm cursor-pointer px-1 shrink-0"
+                  class="text-ink-400 hover:text-glow font-mono text-sm cursor-pointer shrink-0 inline-flex items-center justify-center min-w-9 h-9"
                   title="Download"
                   @click.stop="download(o)"
                 >↓</button>

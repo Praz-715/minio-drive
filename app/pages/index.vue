@@ -39,7 +39,7 @@ const features = [
 <template>
   <div class="min-h-screen grid-texture relative overflow-hidden flex items-center justify-center p-4 sm:p-6">
     <!-- ganti tema -->
-    <button class="btn-ghost absolute top-5 right-5 h-8 px-3 text-xs z-20" title="Ganti tema" @click="toggleTheme()">
+    <button class="btn-ghost absolute top-5 right-5 h-9 px-3 text-xs z-20" title="Ganti tema" @click="toggleTheme()">
       <span class="dark:hidden">☾</span>
       <span class="hidden dark:inline">☀</span>
     </button>

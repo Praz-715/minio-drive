@@ -116,7 +116,7 @@ async function deleteUser() {
             </td>
             <td class="font-mono text-xs text-ink-300">{{ u.policy || '—' }}</td>
             <td>
-              <div class="flex justify-end gap-3 font-mono text-xs row-actions">
+              <div class="flex justify-end gap-3 font-mono text-xs row-actions [&>button]:py-2.5 [&>button]:-my-2.5 [&>button]:inline-flex [&>button]:items-center">
                 <button class="text-ink-400 hover:text-glow cursor-pointer" @click="attachTarget = u; attachPolicy = u.policy || ''">policy</button>
                 <button class="text-ink-400 hover:text-glow cursor-pointer" @click="toggleStatus(u)">
                   {{ u.status === 'enabled' ? 'disable' : 'enable' }}
