@@ -250,6 +250,7 @@ async function createFolder() {
 // ---------- aksi per item ----------
 const menuFor = ref<any>(null)
 const previewItem = ref<any>(null)
+const detailItem = ref<any>(null)
 const shareItem = ref<any>(null)
 const moveTargets = ref<any[] | null>(null)
 const renameItem = ref<any>(null)
@@ -427,13 +428,13 @@ async function onMoved() {
         <span class="font-mono text-xs text-ink-200">{{ selected.size }} dipilih</span>
         <div class="flex-1" />
         <template v-if="mode === 'trash'">
-          <button class="btn-ghost h-9 text-xs" :disabled="bulkBusy" @click="bulkRestore">↩ Pulihkan</button>
-          <button class="btn-danger h-9 text-xs" :disabled="bulkBusy" @click="confirmBulkPermanent = true">🗑 Hapus permanen</button>
+          <button class="btn-ghost h-8 px-2.5 text-xs sm:h-9 sm:px-4" title="Pulihkan" :disabled="bulkBusy" @click="bulkRestore">↩<span class="hidden sm:inline"> Pulihkan</span></button>
+          <button class="btn-danger h-8 px-2.5 text-xs sm:h-9 sm:px-4" title="Hapus permanen" :disabled="bulkBusy" @click="confirmBulkPermanent = true">🗑<span class="hidden sm:inline"> Hapus permanen</span></button>
         </template>
         <template v-else>
-          <button class="btn-ghost h-9 text-xs" :disabled="!selHasFiles || bulkBusy" @click="bulkDownload">↓ Download</button>
-          <button class="btn-ghost h-9 text-xs" :disabled="!selAllOwned || bulkBusy" :title="selAllOwned ? '' : 'ada item yang bukan milikmu'" @click="moveTargets = [...selItems]">⇄ Pindahkan</button>
-          <button class="btn-danger h-9 text-xs" :disabled="!selAllOwned || bulkBusy" :title="selAllOwned ? '' : 'ada item yang bukan milikmu'" @click="bulkTrash">🗑 Sampah</button>
+          <button class="btn-ghost h-8 px-2.5 text-xs sm:h-9 sm:px-4" title="Download" :disabled="!selHasFiles || bulkBusy" @click="bulkDownload">↓<span class="hidden sm:inline"> Download</span></button>
+          <button class="btn-ghost h-8 px-2.5 text-xs sm:h-9 sm:px-4" :title="selAllOwned ? 'Pindahkan' : 'ada item yang bukan milikmu'" :disabled="!selAllOwned || bulkBusy" @click="moveTargets = [...selItems]">⇄<span class="hidden sm:inline"> Pindahkan</span></button>
+          <button class="btn-danger h-8 px-2.5 text-xs sm:h-9 sm:px-4" :title="selAllOwned ? 'Sampah' : 'ada item yang bukan milikmu'" :disabled="!selAllOwned || bulkBusy" @click="bulkTrash">🗑<span class="hidden sm:inline"> Sampah</span></button>
         </template>
       </div>
     </Transition>
@@ -495,7 +496,7 @@ async function onMoved() {
             </th>
             <th>Nama</th>
             <th class="w-36 hidden sm:table-cell">Pemilik</th>
-            <th class="w-24">Ukuran</th>
+            <th class="w-24 hidden sm:table-cell">Ukuran</th>
             <th class="w-40 hidden md:table-cell">{{ mode === 'trash' ? 'Dihapus' : 'Diubah' }}</th>
             <th class="w-12" />
           </tr>
@@ -521,7 +522,7 @@ async function onMoved() {
               <td class="text-xs text-ink-300 hidden sm:table-cell truncate max-w-36">
                 {{ isOwner(o) ? 'kamu' : o.ownerName }}
               </td>
-              <td class="font-mono text-xs text-ink-300">{{ o.isFolder ? '—' : fmtBytes(o.size) }}</td>
+              <td class="font-mono text-xs text-ink-300 hidden sm:table-cell">{{ o.isFolder ? '—' : fmtBytes(o.size) }}</td>
               <td class="font-mono text-xs text-ink-300 hidden md:table-cell">{{ fmtDate(mode === 'trash' ? o.deletedAt : o.updatedAt) }}</td>
               <td class="text-right">
                 <button class="row-actions text-ink-400 hover:text-glow font-mono cursor-pointer inline-flex items-center justify-center min-w-9 h-9" @click="menuFor = o">⋯</button>
@@ -544,6 +545,7 @@ async function onMoved() {
           <button v-if="!menuFor?.isFolder" class="btn-ghost justify-start" @click="previewItem = menuFor; menuFor = null">👁 Preview</button>
           <button v-if="menuFor?.isFolder" class="btn-ghost justify-start" @click="navigateTo(`/drive/folder/${menuFor.id}`); menuFor = null">▸ Buka folder</button>
           <button v-if="!menuFor?.isFolder" class="btn-ghost justify-start" @click="download(menuFor); menuFor = null">↓ Download</button>
+          <button v-if="!menuFor?.isFolder" class="btn-ghost justify-start" @click="detailItem = menuFor; menuFor = null">ⓘ Detail</button>
           <button v-if="isOwner(menuFor)" class="btn-ghost justify-start" @click="shareItem = menuFor; menuFor = null">⇗ Bagikan</button>
           <button v-if="isOwner(menuFor)" class="btn-ghost justify-start" @click="toggleStar(menuFor)">
             {{ menuFor?.starred ? '☆ Hapus bintang' : '★ Beri bintang' }}
@@ -612,6 +614,7 @@ async function onMoved() {
     </Modal>
 
     <DriveFilePreview :item="previewItem" @close="previewItem = null" @share="(o: any) => { shareItem = o; previewItem = null }" @download="download" />
+    <DriveDetailModal :item="detailItem" @close="detailItem = null" />
     <DriveShareModal :item="shareItem" @close="shareItem = null" />
     <DriveMoveModal :items="moveTargets" @close="moveTargets = null" @moved="onMoved" />
   </div>
