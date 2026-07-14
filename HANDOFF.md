@@ -1,6 +1,8 @@
 # Yasa — Handoff
 
-> Dokumen serah-terima state proyek. Dibuat 8 Jul 2026. Baca ini dulu sebelum lanjut ngoding.
+> Dokumen serah-terima state proyek. Dibuat 8 Jul 2026 · **terakhir diupdate 14 Jul 2026**. Baca ini dulu sebelum lanjut ngoding.
+>
+> ⚡ **State TERBARU ada di §17** (sesi 13–14 Jul: share publik folder, auto-claim, RBAC super_admin/god-mode, editor-link, dll). Kalau §17 bentrok dengan bagian lama, **§17 yang benar**. Domain sekarang **savgroup.my.id** (bukan tegwa). HEAD: commit `3963184`.
 
 ## 1. Apa ini
 
@@ -62,7 +64,7 @@ Kalau restart dev server: cek PID lama dulu (`netstat -ano | grep :3001`), `task
 
 Migrations: `0000_drive-init`, `0001_user-soft-delete-bucket`, `0002_team-buckets`.
 
-- **auth.ts** — tabel better-auth: `user`, `session`, `account`, `verification`. Kolom tambahan di `user`: `role` (admin/user), `storageQuota` (default 5 GiB), `storageUsed`, `bucket` (drive-{id}), `deletedAt` (soft delete).
+- **auth.ts** — tabel better-auth: `user`, `session`, `account`, `verification`. Kolom tambahan di `user`: `role` (**super_admin/admin/user** — lihat §17.3), `storageQuota` (default 5 GiB), `storageUsed`, `bucket` (drive-{id}), `deletedAt` (soft delete).
 - **files.ts** — `files` (file & folder satu tabel, tree via `parentId`, `teamBucketId` null=pribadi/terisi=bucket bersama, `objectKey` MinIO, soft-delete `deletedAt`=trash, `starred`), `fileShares` (share ke user, viewer/editor), `shareLinks` (token publik — expiry/password/counter; DIPAKAI oleh fitur Link Publik `/s/[token]`).
 - **teams.ts** — `teamBuckets` (bucket bersama = bucket MinIO asli `team-{8hex}` + hard quota), `teamBucketMembers` (viewer/editor).
 
@@ -173,3 +175,76 @@ Audit menyeluruh (2 reviewer paralel) sebelum deploy. **Bug yang ditemukan sudah
 8. Reverse-proxy TLS di depan app; pastikan cookie `Secure` aktif (otomatis via `useSecureCookies` saat production).
 
 **Rekomendasi (belum dikerjakan, bukan blocker):** self-registration `/register` publik — kalau tool internal, pertimbangkan `disableSignUp` atau email verification. Genericisasi pesan error yang membocorkan detail MinIO (mis. `auth/login.post.ts`). Avatar belum dihitung di `storageUsed` (≤2MB/user). Permanent-delete BFS dibatasi depth 32. Cleanup objek sumber saat move bersifat best-effort (bisa orphan → butuh GC).
+
+## 16. Status produksi & catatan terakhir (9 Jul 2026)
+
+> ⚠️ **Domain sudah PINDAH ke `savgroup.my.id`** (lihat §17.0). URL `tegwa.my.id` di §16 ini historis. §16 item 2 (install `mc`) & `MINIO_SERVER_URL` sudah BERES per §17.
+
+**SUDAH LIVE:** ~~https://drive.tegwa.my.id~~ → **https://drive.savgroup.my.id**
+
+- **Repo GitHub:** `https://github.com/Praz-715/minio-drive` (branch `main`).
+- **Server:** app di `/opt/minio-drive`, systemd unit **`yasa-drive.service`** (user `user1`), jalanin `node .output/server/index.mjs`, listen `0.0.0.0:3000`. **Tanpa nginx** — langsung **Cloudflare Tunnel** (cloudflared) → app. **MinIO & PostgreSQL di localhost server yang sama** (`.env`: `NUXT_MINIO_ENDPOINT=http://localhost:9000`, `DATABASE_URL=...@localhost:5432/drive`, `BETTER_AUTH_URL=https://drive.tegwa.my.id`). RAM server 15Gi (lega, bukan OOM).
+- **Redeploy:** di server → `git pull && npm run build && sudo systemctl restart yasa-drive` (skip `npm ci`/`db:migrate` kalau dependency/schema gak berubah).
+
+**Fix produksi 9 Jul 2026:**
+- **Bucket provisioning race** (gejala: "klik pertama error, kedua sukses" saat write pertama tiap user). `ensureUserBucket` bikin bucket lalu langsung `mc quota set`; MinIO kadang belum register bucket baru → quota gagal attempt-1 (race). **Fix** (commit `39a4b13`): catat `user.bucket` ke DB DULU + `setBucketQuotaRetry` (backoff 3x) + quota NON-FATAL. `createBucketWithQuota` (tim) juga retry.
+- **502 saat delete** = transient pas **restart redeploy** (cloudflared langsung ke app, ada ~1-2 dtk downtime saat `systemctl restart`), **BUKAN bug**. Delete diverifikasi live: soft/permanent/burst/folder-rekursif semua 200 & cepat. 502 random di luar window restart baru perlu diselidiki (cek `journalctl -u yasa-drive`).
+
+**⚠️ MASIH HARUS DIKERJAKAN (penting):**
+1. **ROTASI SECRET yang bocor** — commit lama `c7a7e4c` di GitHub sempat memuat kredensial asli (MinIO root & DB) di HANDOFF. HANDOFF sudah di-redact ke depan, TAPI history masih menyimpannya → **ganti password MinIO root & `drive_user` DB** (+ update `.env` server + restart). Belum dilakukan.
+2. **Install `mc` di server** — `.env` prod belum ada `NUXT_MC_PATH`. Quota sekarang non-fatal (app gak error), tapi hard-quota MinIO gak beneran nempel sampai `mc` ada: `sudo curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && sudo chmod +x /usr/local/bin/mc`, lalu tambah `NUXT_MC_PATH=/usr/local/bin/mc` di `.env` + restart.
+3. **Bind app ke `127.0.0.1`** (sekarang `0.0.0.0:3000` — keekspos) via `Environment=HOST=127.0.0.1` di unit + `daemon-reload` + restart; pastikan `ufw` tutup 3000 dari luar (semua lewat CF).
+4. Service account MinIO khusus (bukan root) + selaraskan `MINIO_SERVER_URL` ke host publik biar presigned URL & link publik `/s/` reachable dari luar.
+
+## 17. Sesi 13–14 Jul 2026 — update besar (share publik folder, RBAC super_admin, dll)
+
+> Ini status **TERBARU** & mengalahkan detail lama yang bentrok (domain, model role). HEAD saat ini: commit **`3963184`** (branch `main`, repo `Praz-715/minio-drive`). Semua kerjaan di bawah **sudah di-commit & push** dan **diverifikasi E2E live** di dev server (kecuali yang disebut belum).
+
+### 17.0 Ganti domain → savgroup.my.id
+- App: **https://drive.savgroup.my.id** · MinIO publik: **https://s3.savgroup.my.id** (via Cloudflare Tunnel). `tegwa.my.id` lama tidak dipakai.
+- `.env` server: `BETTER_AUTH_URL=https://drive.savgroup.my.id`, `NUXT_MINIO_ENDPOINT=https://s3.savgroup.my.id` (WAJIB pakai `https://`), `DATABASE_URL=...@localhost:5432/drive`. `/etc/default/minio`: `MINIO_SERVER_URL="https://s3.savgroup.my.id"`.
+- **`mc` SUDAH terinstall** di server (`NUXT_MC_PATH=/usr/local/bin/mc`) → hard-quota nempel. **§16 item 2 = DONE.** `MINIO_SERVER_URL` juga sudah selaras → presigned/link publik reachable dari luar.
+
+### 17.1 Fix download/preview (endpoint tanpa skema)
+Gejala: abis ganti domain, download & preview gagal (login/browse tetap OK karena itu cuma DB). Penyebab: `NUXT_MINIO_ENDPOINT=s3.savgroup.my.id` **tanpa `https://`** → `new URL()` lempar `ERR_INVALID_URL` → semua operasi MinIO (presign/upload/thumbnail) gagal. **Fix**: `minioEndpointUrl()` di `server/utils/minio.ts` — normalisasi (tanpa skema → prepend `https://`) + error jelas; dipakai `minioClientFor()` & `mc.ts`. Sekarang walau `.env` lupa skema tetap jalan.
+
+### 17.2 Link publik FOLDER + auto-claim + editor-untuk-yang-login
+Melengkapi `/s/[token]` biar setara Google Drive:
+- **Folder bisa dibagikan lewat link** (dulu file saja). Halaman `/s/[token]` jadi **browser folder read-only**: breadcrumb, navigasi subfolder, preview/download per-file. Endpoint baru **`/api/s/[token]/browse.post.ts`** (tanpa sesi). `access.post` untuk link folder wajib `fileId` + **guard `isWithinFolder()`** (pengunjung tak bisa nyomot file di luar folder yang dibagikan; breadcrumb distop di root).
+- **Auto-claim** (`/api/s/[token]/claim.post.ts`): pengunjung yang SUDAH login, saat buka link → otomatis dapat baris `fileShares` → muncul di "Dibagikan ke saya". **Hanya item PRIBADI** (item tim aksesnya lewat keanggotaan). Idempoten + **upgrade-only** (viewer→editor kalau link editor; TAK pernah turun). Banner "ditambahkan ke Drive kamu".
+- **Link bisa viewer/editor** (`link.post` terima `permission`; editor hanya untuk item pribadi, item tim dipaksa viewer). ShareModal ada pilihan **Akses**; `link.get` balikin permission.
+- **Anonim = read-only SELALU** (browse/preview/download; mengedit butuh akun). Halaman `/s/` punya **tombol Login & Daftar** (`?redirect` balik ke link). Abis login/daftar → auto-claim kasih permission link. `index.vue`/`register.vue` dukung `?redirect` (path internal saja, anti open-redirect).
+
+### 17.3 RBAC full di DB + role **super_admin** (god-mode)
+- Role: **`super_admin` > `admin` > `user`** (kolom `role` = **text**, TANPA migrasi DB).
+- **Env role DIBUANG** — `ADMIN_EMAILS`/`SUPER_ADMIN_EMAILS` **TIDAK lagi** dipakai untuk role. User baru selalu `user`. Role dikelola PENUH lewat UI **Kelola User** (nulis ke DB).
+- **Bootstrap owner** (`server/plugins/seed-roles.ts`): saat startup, HANYA kalau di DB belum ada `super_admin` sama sekali → set `admin@yasatech.co.id`→super_admin & `teguh.prasetyo@yasatech.co.id`→admin (owner **di-hardcode** di file itu; ganti konstanta di sana kalau owner beda). Begitu ada satu super admin → plugin no-op (TAK pernah menimpa perubahan UI). Aman dari lock-out.
+- **super_admin = god-mode**: lihat SEMUA bucket termasuk bucket pribadi tiap user di Manajemen Bucket; bisa **browse/buka/download FILE APA PUN** milik siapa saja. `fileAccess()` short-circuit → super = `owner` atas semua file. Endpoint **`/api/drive/browse?owner={userId}`** (super-only) + halaman **`/drive/user-files/[id]`** (klik nama user di tabel Bucket Pribadi → jelajah Drive-nya, read-only di UI). Search (`special.get`) untuk super = cari di SEMUA file.
+- **admin biasa**: kelola user + bucket bersama saja; **TIDAK** bisa lihat/buka file pribadi user lain (diverifikasi 403; `?owner=`/`/url`/search-all semua ditolak). Bucket Pribadi (per-user) di Manajemen Bucket **cuma tampil untuk super_admin**. Hanya super yang bisa **memberi/mengedit/menonaktifkan** akun super_admin.
+- Helper: `app/utils/roles.ts` (`isAdminRole`/`isSuperAdminRole`/`roleLabel` — client) + `server/utils/auth.ts` (`isAdminRole`/`isSuperAdminRole`/`requireDriveSuperAdmin` — server). `requireDriveAdmin` sekarang lolos admin **dan** super_admin.
+
+### 17.4 Perbaikan UI share & sidebar
+- **Role terlihat di "Dibagikan ke saya"**: badge izin di halaman (kolom **"Akses kamu"**: `LIHAT SAJA`/`BISA EDIT`), sidebar (ikon), & header Browser saat buka folder yang dibagikan (berlaku juga untuk anggota bucket bersama yang bukan owner). Helper `permLabel()`/`permBadgeClass()` di `format.ts`. Badge dibikin **`whitespace-nowrap`** (tak kepotong 2 baris) + tanpa emoji (konsisten warna+teks, ala badge AKTIF/ADMIN).
+- **Pemilik terlihat**: "Dibagikan ke saya" nampilin pemilik folder — sidebar "oleh {nama}"; halaman kolom Pemilik (desktop) + di bawah nama (HP).
+- **Tombol "Lepaskan"**: penerima bisa melepas akses share dari daftarnya sendiri. `shares.delete` punya jalur **self-leave** (tanpa `userId` / `userId`=diri sendiri → hapus baris share sendiri tanpa perlu owner); file **TIDAK** dihapus, pemilik bisa share ulang. Owner mencabut akses user lain tetap seperti semula.
+- **Sidebar scroll**: "Drive Bersama" & "Dibagikan ke saya" maks **~3 item** terlihat, sisanya scroll **di section itu saja** (`max-h` + `overflow-y-auto` + `.sidebar-scroll` di `main.css`; tinggi dikalibrasi dari tinggi item asli — team 32px→104px, share 41px→132px). Tidak lagi di-`slice`.
+
+### 17.5 Fix dev 403 (CSRF)
+`better-auth` `trustedOrigins` toleran di dev (percaya `localhost:3000/3001`) → `nuxt dev` tak kena **403** walau `BETTER_AUTH_URL` beda port. Produksi tetap ketat (hanya `BETTER_AUTH_URL`). Ada di `server/utils/auth.ts` (`isProd`).
+
+### 17.6 File penting ditambah/berubah sesi ini
+- **Baru**: `server/api/s/[token]/browse.post.ts`, `server/api/s/[token]/claim.post.ts`, `server/plugins/seed-roles.ts`, `app/utils/roles.ts`, `app/pages/drive/user-files/[id].vue`.
+- **Berubah signifikan**: `server/utils/{auth,drive-files,minio,mc}.ts`, `server/api/drive/browse.get.ts`, `.../special.get.ts`, `.../buckets/index.get.ts`, `.../users/{index.post,[id].patch,[id].delete}.ts`, `.../files/[id]/{link.post,link.get,shares.delete}.ts`, `server/api/s/[token].get.ts`, `.../[token]/access.post.ts`, `app/components/drive/{Browser,ShareModal}.vue`, `app/layouts/drive.vue`, `app/pages/drive/{buckets,users,shared-with-me}.vue`, `app/pages/{index,register}.vue`, `app/pages/s/[token].vue`, `app/assets/css/main.css`.
+
+### 17.7 Deploy & catatan
+- **TIDAK ada migrasi DB** untuk semua kerjaan sesi ini (role = text; `shareLinks` sudah punya `fileId`). Deploy: `cd /opt/minio-drive && git pull && npm run build && sudo systemctl restart yasa-drive`.
+- Saat restart, **bootstrap role** jalan (set owner kalau server belum punya super_admin). Cek: `journalctl -u yasa-drive -n 30 | grep -i bootstrap`. Kalau server sudah punya super tapi teguh belum admin → set manual di **Kelola User**.
+- `ADMIN_EMAILS`/`SUPER_ADMIN_EMAILS` di `.env` server sekarang **tak terpakai** — boleh dihapus.
+- Akun tes throwaway di DB **dev** (bukan produksi): `pengunjung.test@yasatech.co.id` (sering dinonaktifkan) — abaikan/hapus.
+
+### 17.8 ⚠️ Outstanding (update)
+1. 🔐 **ROTASI SECRET yang bocor** — MinIO root & DB pw pernah ke-commit (`c7a7e4c` di GitHub). **BELUM dilakukan. PALING KRITIS.** (ganti password MinIO root & `drive_user` → update `.env` server + `/etc/default/minio` + restart MinIO & app.)
+2. **Service account MinIO khusus** (policy scoped) untuk `NUXT_DRIVE_MINIO_*` — masih pakai root `minio-admin`. (`mc` & `MINIO_SERVER_URL` **sudah beres**.)
+3. **Bind app ke `127.0.0.1`** (masih `0.0.0.0:3000`) + tutup port 3000 dari luar (semua lewat CF).
+4. Pastikan `.env` server `NUXT_MINIO_ENDPOINT` eksplisit `https://s3.savgroup.my.id` (kode sudah normalisasi, tapi eksplisit lebih rapi).
+5. Rekomendasi lama (§15) yang masih relevan: `disableSignUp`/verifikasi email kalau internal, avatar belum dihitung di `storageUsed`, GC objek orphan saat move.
