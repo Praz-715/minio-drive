@@ -193,11 +193,8 @@ useHead({
   <div class="min-h-screen flex flex-col">
     <!-- top bar -->
     <header class="h-14 border-b border-ink-800 flex items-center justify-between px-4 sm:px-6 shrink-0">
-      <NuxtLink to="/" class="flex items-center gap-2.5">
-        <div class="size-8 rounded-lg bg-glow/15 border border-glow/40 grid place-items-center">
-          <span class="text-glow font-black text-sm">Y</span>
-        </div>
-        <p class="font-extrabold tracking-tight">YASA <span class="text-glow">DRIVE</span></p>
+      <NuxtLink to="/" class="min-w-0">
+        <BrandMark size="sm" />
       </NuxtLink>
       <button class="btn-ghost h-9 px-2.5 text-xs" title="Ganti tema" @click="toggleTheme()">
         <span class="dark:hidden">☾</span>

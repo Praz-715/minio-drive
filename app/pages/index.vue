@@ -51,14 +51,8 @@ const features = [
     <div class="w-full max-w-5xl relative grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
       <!-- ============ HERO ============ -->
       <div class="text-center lg:text-left">
-        <div class="rise inline-flex items-center gap-3">
-          <div class="size-12 rounded-2xl bg-glow/15 border border-glow/40 grid place-items-center glow-mark">
-            <span class="text-glow font-black text-xl">Y</span>
-          </div>
-          <div class="text-left">
-            <h1 class="text-2xl font-extrabold tracking-tight leading-none">YASA <span class="text-glow">DRIVE</span></h1>
-            <p class="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-400 mt-1.5">self-hosted storage · yasatech</p>
-          </div>
+        <div class="rise inline-flex">
+          <BrandMark size="lg" subtitle="self-hosted storage · yasatech" />
         </div>
 
         <h2

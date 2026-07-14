@@ -8,6 +8,7 @@ const { data: me, refresh: refreshMe } = useFetch('/api/drive/me', { server: fal
 const { data: sharedRoots, refresh: refreshShared } = useFetch('/api/drive/shared-roots', { server: false })
 
 const isAdmin = computed(() => isAdminRole(me.value?.role))
+const isSuperAdmin = computed(() => isSuperAdminRole(me.value?.role))
 const sharedTeams = computed(() => (sharedRoots.value as any)?.teams || [])
 const sharedItems = computed(() => (sharedRoots.value as any)?.shares || [])
 const usagePct = computed(() =>
@@ -56,6 +57,7 @@ function doSearch() {
 
 // ---- profil ----
 const showProfile = ref(false)
+const showBranding = ref(false)
 const profileForm = reactive({ name: '', currentPassword: '', newPassword: '' })
 const savingProfile = ref(false)
 const avatarInput = ref<HTMLInputElement>()
@@ -136,11 +138,8 @@ const nav = computed(() => [
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="px-4 pt-5 pb-4 flex items-center justify-between">
-        <NuxtLink to="/drive" class="flex items-center gap-2.5">
-          <div class="size-8 rounded-lg bg-glow/15 border border-glow/40 grid place-items-center">
-            <span class="text-glow font-black text-sm">Y</span>
-          </div>
-          <p class="font-extrabold tracking-tight">YASA <span class="text-glow">DRIVE</span></p>
+        <NuxtLink to="/drive" class="min-w-0">
+          <BrandMark size="sm" />
         </NuxtLink>
         <button class="lg:hidden size-9 grid place-items-center text-ink-400 hover:text-ink-100 cursor-pointer" aria-label="Tutup menu" @click="sidebarOpen = false">✕</button>
       </div>
@@ -304,6 +303,7 @@ const nav = computed(() => [
                 <p class="font-mono text-[11px] text-ink-400 truncate">{{ me?.email }}</p>
               </div>
               <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-800 transition-colors cursor-pointer" @click="openProfile">✎ Edit Profil</button>
+              <button v-if="isSuperAdmin" class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-800 transition-colors cursor-pointer" @click="showBranding = true; profileOpen = false">🎨 Edit Nama &amp; Logo</button>
               <button class="w-full text-left px-4 py-2.5 text-sm text-danger hover:bg-ink-800 transition-colors cursor-pointer border-t border-ink-800" @click="logout">↪ Logout</button>
             </div>
           </Transition>
@@ -384,5 +384,8 @@ const nav = computed(() => [
         </div>
       </form>
     </Modal>
+
+    <!-- Edit Nama & Logo (super admin) -->
+    <DriveBrandingModal :open="showBranding" @close="showBranding = false" />
   </div>
 </template>

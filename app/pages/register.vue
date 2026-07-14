@@ -47,14 +47,8 @@ async function submit() {
     <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-glow/8 blur-[120px] rounded-full pointer-events-none" />
 
     <div class="w-full max-w-sm relative">
-      <NuxtLink to="/" class="mb-8 rise flex items-center gap-3">
-        <div class="size-10 rounded-xl bg-glow/15 border border-glow/40 grid place-items-center glow-mark">
-          <span class="text-glow font-black">Y</span>
-        </div>
-        <div>
-          <h1 class="text-2xl font-extrabold tracking-tight leading-none">YASA <span class="text-glow">DRIVE</span></h1>
-          <p class="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-400 mt-1">buat akun baru</p>
-        </div>
+      <NuxtLink to="/" class="mb-8 rise inline-flex">
+        <BrandMark size="md" subtitle="buat akun baru" />
       </NuxtLink>
 
       <form class="card p-6 space-y-4 rise" style="animation-delay: 90ms" @submit.prevent="submit">
