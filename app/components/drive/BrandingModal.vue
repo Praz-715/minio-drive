@@ -13,15 +13,25 @@ const form = reactive<{ appName: string; logo: string | null }>({ appName: '', l
 const saving = ref(false)
 const logoInput = ref<HTMLInputElement>()
 
+const loadingEdit = ref(false)
 watch(
   () => props.open,
-  (o) => {
+  async (o) => {
     if (!o) return
-    // isi dari branding aktif
-    const hasCustom = !!(branding.value.appName || branding.value.logo)
-    mode.value = hasCustom ? 'custom' : 'default'
-    form.appName = branding.value.appName || ''
-    form.logo = branding.value.logo || null
+    // ambil branding penuh (data URI logo) sekali saat modal dibuka
+    loadingEdit.value = true
+    try {
+      const cur = await $fetch<{ appName: string | null; logo: string | null }>('/api/branding/edit')
+      mode.value = cur.appName || cur.logo ? 'custom' : 'default'
+      form.appName = cur.appName || ''
+      form.logo = cur.logo || null
+    } catch {
+      mode.value = branding.value.appName || branding.value.hasLogo ? 'custom' : 'default'
+      form.appName = branding.value.appName || ''
+      form.logo = null
+    } finally {
+      loadingEdit.value = false
+    }
   },
   { immediate: true },
 )
@@ -56,7 +66,8 @@ async function save() {
     const payload =
       mode.value === 'default' ? { appName: '', logo: null } : { appName: form.appName, logo: form.logo }
     const res: any = await $fetch('/api/branding', { method: 'POST', body: payload })
-    branding.value = { appName: res.appName, logo: res.logo } // update seluruh app seketika
+    // update seluruh app seketika (metadata; logo dilayani via endpoint gambar)
+    branding.value = { appName: res.appName, hasLogo: res.hasLogo, logoVersion: res.logoVersion }
     toast.ok('Nama & logo diperbarui')
     emit('close')
   } catch (e: any) {

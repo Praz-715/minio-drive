@@ -21,7 +21,12 @@ const nameCls = props.size === 'sm' ? '' : 'text-2xl leading-none'
       class="bg-glow/15 border border-glow/40 grid place-items-center overflow-hidden shrink-0"
       :class="boxCls"
     >
-      <img v-if="branding.logo" :src="branding.logo" alt="logo" class="size-full object-contain p-0.5" />
+      <img
+        v-if="branding.hasLogo"
+        :src="`/api/branding/logo?v=${branding.logoVersion}`"
+        alt="logo"
+        class="size-full object-contain p-0.5"
+      />
       <span v-else class="text-glow font-black">Y</span>
     </span>
     <span class="min-w-0">

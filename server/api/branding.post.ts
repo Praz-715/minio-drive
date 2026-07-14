@@ -33,5 +33,7 @@ export default defineEventHandler(async (event) => {
     .values({ id: 'app', appName, logo, updatedAt: new Date() })
     .onConflictDoUpdate({ target: appSettings.id, set: { appName, logo, updatedAt: new Date() } })
 
-  return { ok: true, appName, logo }
+  invalidateBranding()
+  const fresh = await getBranding() // isi cache + ambil updatedAt terbaru
+  return { ok: true, ...brandingMeta(fresh) }
 })
