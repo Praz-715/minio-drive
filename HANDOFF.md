@@ -2,7 +2,7 @@
 
 > Dokumen serah-terima state proyek. Dibuat 8 Jul 2026 · **terakhir diupdate 14 Jul 2026**. Baca ini dulu sebelum lanjut ngoding.
 >
-> ⚡ **State TERBARU ada di §18** (sesi 14 Jul lanjutan: audit keamanan + 5 fix, logging ke file, overhaul responsive, tombol Detail file, branding kustom super admin + caching, favicon/manifest). §17 = update besar sebelumnya (share publik folder, RBAC super_admin/god-mode). Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id**. HEAD: commit `29c0813`.
+> ⚡ **State TERBARU ada di §19** (fix natural-sort, rebrand → "Office Drive", + roadmap dari analisis vs Google Drive & rencana preview Office). §18 = sesi besar sebelumnya (audit+5fix, logging, responsive, Detail file, branding kustom+caching, favicon). §17 = share publik folder + RBAC super_admin/god-mode. Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id**. HEAD: commit `b256281`.
 
 ## 1. Apa ini
 
@@ -311,3 +311,39 @@ Optimasi supaya logo tak di-embed base64 di tiap payload & tak query DB tiap ren
 2. Service account MinIO khusus (masih root `minio-admin`).
 3. Bind app ke `127.0.0.1` (masih `0.0.0.0:3000`) + tutup port 3000 dari luar.
 4. (Baru, minor) branding cache per-proses → kasih TTL kalau multi-instance; LOW audit §18.1 (rate-limit link, escape Content-Disposition, guard restore/avatar super).
+
+## 19. Sesi 21 Jul 2026 — fix natural-sort, rebrand "Office Drive", roadmap
+
+> State **TERBARU**. HEAD: commit **`b256281`**. Commit sejak §18: `5fc5c03` (title 'Drive') → `d0d1d08` (copy netral) → `b256281` (natural-sort). Semua sudah push & diverifikasi live.
+
+### 19.1 Fix natural-sort file/folder (commit `b256281`)
+Bug: listing di-sort **leksikografis** → "1., 10., 11., 12., 13., 2., 3.". Fix: **natural sort** (`Intl.Collator('id', { numeric: true })`, folder tetap dulu) → "1., 2., …, 10., 11.". Postgres tak punya natural-collation bawaan, jadi diurutkan di **JS setelah fetch**. Helper baru **`sortByFolderThenName()`** di [server/utils/drive-files.ts](server/utils/drive-files.ts); dipakai di [browse.get.ts](server/api/drive/browse.get.ts) (4 mode: root/folder/team/owner) & [s/[token]/browse.post.ts](server/api/s/[token]/browse.post.ts) (folder publik). Recent/starred/trash/search **tetap** urut tanggal (tak disentuh). Diverifikasi live di folder nyata.
+
+### 19.2 Rebrand → "Office Drive" (de-branding netral) (commit `d0d1d08` + `5fc5c03`)
+User geser branding dari "Yasa/yasatech" ke **generik/white-label** (biar cocok dengan fitur branding kustom §18.5):
+- `site.webmanifest` name/short_name → **"Office Drive"**; footer `/s` → "Office Drive".
+- Subtitle login & console → **"Store Freely"** (dari "self-hosted storage · yasatech").
+- Placeholder email → `nama@mail.co.id` (generik).
+- **Title tab default** = **`Drive`** (nuxt.config).
+> Catatan: brand default di komponen `BrandMark` masih fallback ke "YASA DRIVE" kalau branding kustom kosong (belum diganti ke "Office Drive"). Nama produk secara identitas sekarang condong ke **"Office Drive"**; folder repo tetap `ghanem-yasatech-file-sharing`, systemd tetap `yasa-drive.service` (sengaja tak diubah biar tak mismatch realita server).
+
+### 19.3 Analisis vs Google Drive (hasil review)
+- **Sebagai lapisan storage & sharing** (mirip Dropbox basic / Drive tanpa Docs): **~80% setara**. File mgmt + sharing lengkap; malah **unggul** di: link **password + expiry** (GDrive consumer gak punya), **self-host/data sovereignty**, **white-label branding**, **Storage Console** admin MinIO.
+- **Sebagai ekosistem Google Drive utuh** (termasuk Docs/Sheets, sync, kolaborasi): **~35–40%**.
+- **Gap besar (belum ada)**: editing real-time (Docs/Sheets/Slides), sync desktop client + app mobile + offline, **version history**, content/full-text search + OCR, komentar/activity/notifikasi, **preview Office inline**, upload folder utuh, auto-purge sampah, label/warna.
+- **Positioning**: "Google Drive-nya **storage & sharing**, self-hosted" — BUKAN pengganti Workspace/Docs.
+
+### 19.4 Rencana Preview Office (docx/xlsx/pptx) — DIPUTUSKAN, belum diimplementasi
+Rekomendasi (dari diskusi):
+- ✅ **Client-side render** (data gak keluar dari browser/infra — cocok value-prop): **docx → `docx-preview`**, **xlsx → `SheetJS`** (tabel HTML). **pptx** lemah client-side → biarin **download-only** dulu (label jujur di UI). Lazy-load lib. Pasang di `FilePreview.vue` (Drive) + `/s` publik (dua-duanya udah punya presigned URL).
+- ❌ **JANGAN** pakai Microsoft/Google online viewer — ngirim file ke pihak ketiga, ngelawan jualan self-hosted.
+- 🔮 **Nanti** (kalau serius ke arah Docs): **OnlyOffice / Collabora Document Server** self-hosted — solve preview **dan** editing kolaboratif sekaligus (tapi infra berat ~1-2GB).
+
+### 19.5 Roadmap prioritas (impact ÷ effort)
+1. 🥇 **Version history** (simpan objek versi lama saat overwrite) + **auto-purge trash** terjadwal
+2. 🥈 **Search lebih pinter** (filter tipe/tanggal/pemilik dulu; full-text nanti)
+3. 🥉 **Preview Office** (§19.4) + **upload folder** (`webkitdirectory`)
+4. Jangka panjang & berat: **desktop sync client**, **real-time editing** (OnlyOffice/Collabora)
+
+### 19.6 ⚠️ Outstanding (tetap, belum berubah dari §18.9)
+🔐 **ROTASI SECRET bocor (PALING KRITIS, BELUM)** · service account MinIO khusus · bind `127.0.0.1`. Plus catatan: **DB dev = DB server (shared 192.168.1.111 ≡ localhost)** — migrate/test lokal langsung kena produksi (lihat §18.8).
