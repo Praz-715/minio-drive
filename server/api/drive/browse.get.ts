@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { files, teamBuckets, user } from '../../db/schema'
 
 /**
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
       .select()
       .from(files)
       .where(and(eq(files.parentId, parent), isNull(files.deletedAt)))
-      .orderBy(desc(files.isFolder), asc(files.name))
+      .orderBy(desc(files.isFolder))
   } else if (team) {
     const t = await teamAccess(me, team)
     if (!t) throw createError({ statusCode: 403, message: 'Bukan anggota bucket bersama ini' })
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
       .select()
       .from(files)
       .where(and(eq(files.teamBucketId, team), isNull(files.parentId), isNull(files.deletedAt)))
-      .orderBy(desc(files.isFolder), asc(files.name))
+      .orderBy(desc(files.isFolder))
   } else if (owner) {
     // super admin melihat root Drive pribadi user lain (god-mode)
     if (!isSuperAdminRole((session.user as any).role)) {
@@ -65,14 +65,16 @@ export default defineEventHandler(async (event) => {
       .select()
       .from(files)
       .where(and(eq(files.ownerId, owner), isNull(files.parentId), isNull(files.teamBucketId), isNull(files.deletedAt)))
-      .orderBy(desc(files.isFolder), asc(files.name))
+      .orderBy(desc(files.isFolder))
   } else {
     rows = await db
       .select()
       .from(files)
       .where(and(eq(files.ownerId, me), isNull(files.parentId), isNull(files.teamBucketId), isNull(files.deletedAt)))
-      .orderBy(desc(files.isFolder), asc(files.name))
+      .orderBy(desc(files.isFolder))
   }
+
+  sortByFolderThenName(rows) // natural sort: 1, 2, …, 10 (bukan 1, 10, 2)
 
   const owners = await ownerMap(rows.map((r) => r.ownerId))
   return {

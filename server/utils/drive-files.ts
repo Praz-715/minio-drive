@@ -185,6 +185,14 @@ export async function isWithinFolder(fileId: string, ancestorId: string): Promis
   return false
 }
 
+// Urutan Drive: folder dulu, lalu nama secara NATURAL (1, 2, …, 10 — bukan
+// leksikografis 1, 10, 2). Postgres tak punya natural-collation bawaan, jadi
+// urutkan di JS pakai Intl.Collator. Dipakai listing folder (browse) & /s publik.
+const nameCollator = new Intl.Collator('id', { numeric: true, sensitivity: 'base' })
+export function sortByFolderThenName<T extends { isFolder: boolean; name: string }>(rows: T[]): T[] {
+  return rows.sort((a, b) => (a.isFolder === b.isFolder ? nameCollator.compare(a.name, b.name) : a.isFolder ? -1 : 1))
+}
+
 export async function ownerMap(ids: string[]): Promise<Record<string, { id: string; name: string; bucket: string | null }>> {
   const uniq = [...new Set(ids)].filter(Boolean)
   if (!uniq.length) return {}

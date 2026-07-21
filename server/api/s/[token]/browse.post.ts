@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { files, shareLinks, user } from '../../../db/schema'
 
 const MAX_DEPTH = 32
@@ -57,7 +57,8 @@ export default defineEventHandler(async (event) => {
     .select()
     .from(files)
     .where(and(eq(files.parentId, target.id), isNull(files.deletedAt)))
-    .orderBy(desc(files.isFolder), asc(files.name))
+    .orderBy(desc(files.isFolder))
+  sortByFolderThenName(rows) // natural sort: 1, 2, …, 10 (bukan 1, 10, 2)
 
   // breadcrumb DIBATASI di root — jangan bocorkan folder leluhur di atasnya
   const crumbs: { id: string; name: string }[] = []
