@@ -2,7 +2,9 @@
 
 > Dokumen serah-terima state proyek. Dibuat 8 Jul 2026 · **terakhir diupdate 23 Jul 2026**. Baca ini dulu sebelum lanjut ngoding.
 >
-> ⚡ **State TERBARU ada di §20** (rebrand "Drive" → "Files" di frontend + fitur presence "siapa online" untuk super admin + samaran super_admin→admin buat viewer non-super). §19 = fix natural-sort + rebrand "Office Drive" + roadmap. §18 = audit+5fix, logging, responsive, Detail, branding kustom+caching, favicon. §17 = share publik folder + RBAC super_admin/god-mode. Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id** (rencana diganti, mis. `files.*`). HEAD: commit `a9a17a2`.
+> ⚡ **State TERBARU ada di §21** (PWA installable + halaman offline · matikan pendaftaran publik — user hanya dibuat admin). §20 = rebrand "Drive"→"Files" + presence "siapa online" + samaran super_admin→admin. §19 = fix natural-sort + rebrand "Office Drive" + roadmap. §18 = audit+5fix, logging, responsive, Detail, branding kustom+caching, favicon. §17 = share publik folder + RBAC super_admin/god-mode. Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id** (rencana diganti, mis. `files.*`). HEAD: commit `42de20c`.
+>
+> ⚠️ **Deploy sekarang butuh `npm install`** (ada dependency baru `@vite-pwa/nuxt`): `git pull && npm install && npm run build && sudo systemctl restart yasa-drive`.
 
 ## 1. Apa ini
 
@@ -390,3 +392,30 @@ Di [app/pages/files/users.vue](app/pages/files/users.vue): kalau yang buka **adm
 
 ### 20.5 ⚠️ Outstanding (tetap, belum berubah dari §19.6)
 🔐 **ROTASI SECRET bocor (PALING KRITIS, BELUM)** · service account MinIO khusus (masih root) · bind `127.0.0.1`. **DB dev = DB prod (shared)** — migrate/test lokal langsung kena prod (§18.8). Belum: ganti domain (`drive.savgroup.my.id` → mis. `files.*`), hardening server utk samaran role (§20.3).
+
+## 21. Sesi 23 Jul 2026 (lanjutan) — PWA installable + halaman offline, matikan pendaftaran publik
+
+> State **TERBARU**. HEAD: commit **`42de20c`**. Commit: `2137f57` (PWA) → `42de20c` (matikan pendaftaran publik) → commit docs ini. Diverifikasi via API + **build produksi** (bukan klik-browser — tak ada Playwright/chromium di env).
+
+### 21.0 ⚠️ Deploy berubah — WAJIB `npm install`
+Ada dependency baru **`@vite-pwa/nuxt`** (+ workbox). Deploy: `cd /opt/minio-drive && git pull && **npm install** && npm run build && sudo systemctl restart yasa-drive`. (Sebelumnya boleh skip `npm install`; sekarang WAJIB sekali ini.)
+
+### 21.1 PWA — installable + halaman offline (commit `2137f57`)
+Aplikasi jadi **PWA**: bisa di-install ke home screen/desktop (standalone, splash, ikon) + **halaman offline** saat tak ada koneksi.
+- **Modul `@vite-pwa/nuxt` v1.1.1**, `strategies: 'injectManifest'`, `registerType: 'autoUpdate'`. Config di [nuxt.config.ts](nuxt.config.ts) blok `pwa`.
+- **SW custom** [app/service-worker/sw.ts](app/service-worker/sw.ts) (srcDir `service-worker` **relatif ke `app/`** → file di `app/service-worker/`): navigasi **network-first** (+ timeout **8 dtk** utk internet lambat) → gagal/timeout fallback ke **`/offline.html`**. Aset app & `/api` **TIDAK di-cache** (`globPatterns: []`) → **nol risiko konten basi / kebocoran auth**. `offline.html` di-cache **manual** saat SW `install` (bukan lewat precache, biar jalan di dev & prod).
+- **[public/offline.html](public/offline.html)** — halaman offline self-contained (inline CSS, tema app, tombol "Coba lagi", auto-reload saat `online`). Ini **cuma notifikasi offline** — bukan "app dibikin offline" (file tetap butuh server).
+- **Manifest** `/manifest.webmanifest` (di-generate modul; `site.webmanifest` lama DIHAPUS). Komponen `<VitePwaManifest />` ditaruh di [app/app.vue](app/app.vue) supaya `<link rel="manifest">` ke-inject. name/short_name **"Files"**, ikon 192/512 + 512 maskable (maskable masih pakai-ulang 512 — polish: bikin maskable ber-padding).
+- **Tombol "📲 Install aplikasi"** di dropdown profil [app/layouts/drive.vue](app/layouts/drive.vue) — muncul saat `$pwa.showInstallPrompt` (browser Chromium picu `beforeinstallprompt`; **iOS Safari & Firefox tak punya event ini** → tombol tak muncul, install manual via Share).
+- Diverifikasi build prod: `sw.js` ter-emit + `__WB_MANIFEST` ter-inject; `/sw.js` `/offline.html` `/manifest.webmanifest` semua **200**. (Di dev, `/sw.js` bisa 404 — quirk dev-mode, normal.)
+
+### 21.2 Matikan pendaftaran publik — user hanya dibuat admin (commit `42de20c`)
+Registrasi mandiri **dinonaktifkan**; akun baru **HANYA** dibuat admin lewat **Kelola User** (`POST /api/drive/users`).
+- **[server/middleware/block-public-signup.ts](server/middleware/block-public-signup.ts)**: blokir HTTP `POST /api/drive-auth/sign-up/*` → **403**. Panggilan **internal** admin (`useServerAuth().api.signUpEmail` di `users/index.post.ts`) TIDAK lewat middleware ini → admin tetap bisa bikin user.
+- ⚠️ **SENGAJA tak pakai better-auth `disableSignUp`** — itu akan ikut memblokir jalur admin (sama-sama `signUpEmail`).
+- Frontend: hapus link/tombol **"Daftar"** di login (`/`) & halaman share `/s`; hapus page **`/register`** + routeRule `/register → /`; bersihkan ref `/register` di `auth.global.ts`.
+- **Sign-IN tetap jalan** (middleware cuma blokir `/sign-up`). Menutup rekomendasi audit §15.
+- Diverifikasi: sign-up publik **403**, sign-in **200/401**, admin create **200** (user tes dibuat lalu dihapus tuntas: baris DB + bucket MinIO).
+
+### 21.3 ⚠️ Outstanding (tetap)
+🔐 **ROTASI SECRET bocor (PALING KRITIS, BELUM)** · service account MinIO khusus (root) · bind `127.0.0.1` · **DB dev = DB prod** (§18.8). Baru/minor: ikon **maskable** khusus (sekarang pakai-ulang 512), hardening server samaran role (§20.3), ganti domain ke `files.*`.
