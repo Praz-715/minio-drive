@@ -6,6 +6,14 @@ const session = authClient.useSession()
 const myId = computed(() => session.value?.data?.user?.id)
 const iamSuper = computed(() => isSuperAdminRole((session.value?.data?.user as any)?.role))
 
+// Samarkan super_admin jadi "admin" untuk viewer NON-super. Admin biasa cukup
+// tahu 2 role (user & admin) — keberadaan super_admin disembunyikan. Role ASLI
+// (u.role) tetap dipakai untuk guard tombol edit/nonaktif, jadi tombolnya tetap
+// hilang di baris super_admin walau labelnya "admin".
+function shownRole(role: string) {
+  return role === 'super_admin' && !iamSuper.value ? 'admin' : role
+}
+
 // guard client-side: bukan admin/super_admin → balik (server tetap enforce via requireDriveAdmin)
 watch(
   () => session.value?.data,
@@ -224,7 +232,7 @@ onBeforeUnmount(() => {
             </td>
             <td>
               <span :class="isAdminRole(u.role) ? 'badge-ok' : 'badge-dim'">
-                <template v-if="u.role === 'super_admin'">★ </template>{{ roleLabel(u.role) }}
+                <template v-if="iamSuper && u.role === 'super_admin'">★ </template>{{ roleLabel(shownRole(u.role)) }}
               </span>
             </td>
             <td class="font-mono text-xs text-ink-300 hidden sm:table-cell">
