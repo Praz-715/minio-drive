@@ -2,7 +2,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-01',
-  modules: ['nuxt-auth-utils'],
+  modules: ['nuxt-auth-utils', '@vite-pwa/nuxt'],
   css: ['~/assets/css/main.css'],
   // login Drive sekarang di "/" — arahkan tautan lama /login ke sana
   routeRules: {
@@ -48,8 +48,52 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
         { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
-        { rel: 'manifest', href: '/site.webmanifest' },
+        // manifest di-inject otomatis oleh @vite-pwa/nuxt (/manifest.webmanifest)
       ],
+    },
+  },
+
+  // ── PWA (installable) ──
+  // Aplikasi bisa di-install ke home screen / desktop (standalone + splash + ikon).
+  // Service worker SENGAJA tidak precache aset app → NOL risiko konten basi;
+  // file & data tetap butuh koneksi (wajar, file ada di MinIO).
+  pwa: {
+    registerType: 'autoUpdate',
+    // SW custom (injectManifest) → online: network apa adanya; offline/lambat:
+    // fallback ke /offline.html. TANPA nge-cache halaman app (nol stale/auth leak).
+    strategies: 'injectManifest',
+    srcDir: 'service-worker',
+    filename: 'sw.ts',
+    injectManifest: {
+      globPatterns: [], // jangan precache aset app; offline.html di-cache manual di SW
+    },
+    manifest: {
+      id: '/',
+      name: 'Files',
+      short_name: 'Files',
+      description: 'Penyimpanan & berbagi file self-hosted.',
+      lang: 'id',
+      dir: 'ltr',
+      theme_color: '#13161d',
+      background_color: '#13161d',
+      display: 'standalone',
+      orientation: 'any',
+      start_url: '/',
+      scope: '/',
+      categories: ['productivity', 'business', 'utilities'],
+      icons: [
+        { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    },
+    client: {
+      installPrompt: true, // tangkap beforeinstallprompt → tombol Install sendiri
+    },
+    devOptions: {
+      enabled: true, // aktifkan SW di dev (localhost = secure context) buat tes
+      suppressWarnings: true,
+      type: 'module',
     },
   },
 })

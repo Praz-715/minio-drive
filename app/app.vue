@@ -5,5 +5,7 @@
       <NuxtPage />
     </NuxtLayout>
     <Toasts />
+    <!-- inject tautan manifest PWA (@vite-pwa/nuxt) -->
+    <VitePwaManifest />
   </div>
 </template>
