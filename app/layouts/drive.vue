@@ -78,14 +78,11 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onVisibility)
 })
 
-// ---- PWA: tombol install (muncul saat browser menawarkan install) ----
-// $pwa dari @vite-pwa/nuxt; undefined di SSR → tombol tersembunyi (aman).
-// Alias non-"$" karena Vue tak mengekspos binding ber-awalan $ ke template.
-const { $pwa } = useNuxtApp()
-const pwa = $pwa
-async function installApp() {
+// ---- PWA install (lihat composable useInstall) ----
+const { canInstall, promptInstall } = useInstall()
+function installApp() {
   profileOpen.value = false
-  await pwa?.install()
+  promptInstall()
 }
 
 // ---- profil ----
@@ -337,7 +334,7 @@ const nav = computed(() => [
               </div>
               <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-800 transition-colors cursor-pointer" @click="openProfile">✎ Edit Profil</button>
               <button v-if="isSuperAdmin" class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-800 transition-colors cursor-pointer" @click="showBranding = true; profileOpen = false">🎨 Edit Nama &amp; Logo</button>
-              <button v-if="pwa?.showInstallPrompt" class="w-full text-left px-4 py-2.5 text-sm text-glow hover:bg-ink-800 transition-colors cursor-pointer border-t border-ink-800" @click="installApp">📲 Install aplikasi</button>
+              <button v-if="canInstall" class="w-full text-left px-4 py-2.5 text-sm text-glow hover:bg-ink-800 transition-colors cursor-pointer border-t border-ink-800" @click="installApp">📲 Install aplikasi</button>
               <button class="w-full text-left px-4 py-2.5 text-sm text-danger hover:bg-ink-800 transition-colors cursor-pointer border-t border-ink-800" @click="logout">↪ Logout</button>
             </div>
           </Transition>

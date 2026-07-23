@@ -25,6 +25,9 @@ async function submit() {
   await navigateTo(destAfterAuth())
 }
 
+// ---- PWA install (lihat composable useInstall) ----
+const { canInstall, promptInstall } = useInstall()
+
 const features = [
   { icon: '🗂️', title: 'Files pribadi', desc: 'Ruang & kuota sendiri untuk tiap user.' },
   { icon: '👥', title: 'Bucket bersama', desc: 'Satu ruang untuk kerja bareng tim.' },
@@ -91,9 +94,14 @@ const features = [
             <span v-if="loading" class="size-3.5 border-2 border-ink-950/40 border-t-ink-950 rounded-full animate-spin" />
             {{ loading ? 'Masuk…' : 'Masuk ke Files' }}
           </button>
-          <p class="text-center text-xs text-ink-500">
-            Akun dibuatkan oleh admin. Belum punya? Hubungi admin kamu.
-          </p>
+          <button
+            v-if="canInstall"
+            type="button"
+            class="w-full flex items-center justify-center gap-2 text-sm text-ink-300 hover:text-glow transition-colors py-1 cursor-pointer"
+            @click="promptInstall"
+          >
+            <span>📲</span> Install aplikasi
+          </button>
         </form>
 
         <!-- pintu ke Storage Console -->

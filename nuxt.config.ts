@@ -37,6 +37,12 @@ export default defineNuxtConfig({
           innerHTML:
             "(function(){try{var t=localStorage.getItem('yasa-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){document.documentElement.classList.add('dark')}})()",
         },
+        {
+          // tangkap beforeinstallprompt SEDINI mungkin (sebelum bundle) → simpan
+          // ke window.__pwaInstall; composable useInstall() yang pakai (lihat catatan di sana)
+          innerHTML:
+            "(function(){window.__pwaInstall=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaInstall=e;window.dispatchEvent(new Event('pwa:can-install'))});window.addEventListener('appinstalled',function(){window.__pwaInstall=null;window.dispatchEvent(new Event('pwa:installed'))})})()",
+        },
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
