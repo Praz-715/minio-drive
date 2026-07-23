@@ -226,7 +226,6 @@ useHead({
           Punya akun? <span class="hidden sm:inline">Login biar {{ meta.isFolder ? 'folder' : 'file' }} ini otomatis nempel di Files kamu.</span>
         </span>
         <NuxtLink :to="`/?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-primary h-9 text-xs shrink-0">Login</NuxtLink>
-        <NuxtLink :to="`/register?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-ghost h-9 text-xs shrink-0">Daftar</NuxtLink>
       </div>
     </Transition>
 

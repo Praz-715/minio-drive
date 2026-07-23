@@ -4,9 +4,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-07-01',
   modules: ['nuxt-auth-utils', '@vite-pwa/nuxt'],
   css: ['~/assets/css/main.css'],
-  // login Drive sekarang di "/" — arahkan tautan lama /login ke sana
+  // login Drive di "/". Tautan lama /login & pendaftaran publik /register
+  // diarahkan ke halaman login (registrasi mandiri dinonaktifkan — user dibuat admin).
   routeRules: {
     '/login': { redirect: '/' },
+    '/register': { redirect: '/' },
   },
   vite: {
     plugins: [tailwindcss()],

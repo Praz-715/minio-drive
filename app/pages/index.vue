@@ -13,10 +13,6 @@ function destAfterAuth(): string {
   const r = String(route.query.redirect || '')
   return r.startsWith('/') && !r.startsWith('//') ? r : '/files'
 }
-const registerTo = computed(() => {
-  const r = String(route.query.redirect || '')
-  return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register'
-})
 
 async function submit() {
   loading.value = true
@@ -95,9 +91,8 @@ const features = [
             <span v-if="loading" class="size-3.5 border-2 border-ink-950/40 border-t-ink-950 rounded-full animate-spin" />
             {{ loading ? 'Masuk…' : 'Masuk ke Files' }}
           </button>
-          <p class="text-center text-sm text-ink-400">
-            Belum punya akun?
-            <NuxtLink :to="registerTo" class="text-glow font-semibold hover:brightness-110">Daftar</NuxtLink>
+          <p class="text-center text-xs text-ink-500">
+            Akun dibuatkan oleh admin. Belum punya? Hubungi admin kamu.
           </p>
         </form>
 

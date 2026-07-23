@@ -15,8 +15,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // halaman login (/) & register: kalau sudah punya sesi, langsung ke Drive
-  if ((to.path === '/' || to.path === '/register') && import.meta.client) {
+  // halaman login (/): kalau sudah punya sesi, langsung ke Files
+  if (to.path === '/' && import.meta.client) {
     const { data } = await authClient.getSession()
     if (data?.session) return navigateTo('/files')
   }
