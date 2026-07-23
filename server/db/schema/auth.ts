@@ -17,6 +17,7 @@ export const user = pgTable('user', {
   storageQuota: bigint('storage_quota', { mode: 'number' }).notNull().default(5 * 1024 ** 3), // 5 GiB
   storageUsed: bigint('storage_used', { mode: 'number' }).notNull().default(0),
   bucket: text('bucket'), // bucket pribadi MinIO (drive-{id}), dibuat saat provisioning
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }), // presence: heartbeat terakhir; null = belum pernah
   deletedAt: timestamp('deleted_at', { withTimezone: true }), // soft delete — bucket TIDAK dihapus
   // --------------------
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

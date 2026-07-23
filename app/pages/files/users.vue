@@ -125,6 +125,36 @@ async function restore(u: any) {
     toast.error(apiError(e))
   }
 }
+
+// ---- presence: siapa online + terakhir terlihat (KHUSUS super admin) ----
+const presence = ref<Record<string, { online: boolean; lastSeenAt: string | null }>>({})
+const onlineCount = computed(() => Object.values(presence.value).filter((p) => p.online).length)
+let presenceTimer: ReturnType<typeof setInterval> | null = null
+async function loadPresence() {
+  if (!iamSuper.value) return
+  try {
+    const rows: any[] = await $fetch('/api/drive/presence')
+    const map: Record<string, { online: boolean; lastSeenAt: string | null }> = {}
+    for (const r of rows) map[r.id] = { online: r.online, lastSeenAt: r.lastSeenAt }
+    presence.value = map
+  } catch {
+    // diamkan (mis. sesi belum siap / bukan super)
+  }
+}
+// mulai polling begitu status super admin diketahui (session load async)
+watch(
+  iamSuper,
+  (v) => {
+    if (v && !presenceTimer) {
+      loadPresence()
+      presenceTimer = setInterval(loadPresence, 20_000)
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => {
+  if (presenceTimer) clearInterval(presenceTimer)
+})
 </script>
 
 <template>
@@ -134,7 +164,8 @@ async function restore(u: any) {
         <h1 class="text-3xl font-extrabold tracking-tight">Kelola User</h1>
         <p class="text-ink-400 text-sm mt-1">
           {{ users?.filter((u: any) => !u.deletedAt).length ?? 0 }} aktif ·
-          {{ users?.filter((u: any) => u.deletedAt).length ?? 0 }} nonaktif
+          {{ users?.filter((u: any) => u.deletedAt).length ?? 0 }} nonaktif<template v-if="iamSuper"> ·
+          <span class="text-ok font-semibold">{{ onlineCount }} online</span></template>
         </p>
       </div>
       <button class="btn-primary" @click="showAdd = true">+ User Baru</button>
@@ -164,9 +195,16 @@ async function restore(u: any) {
           >
             <td>
               <div class="flex items-center gap-3 min-w-0">
-                <img v-if="u.image" :src="u.image" alt="" class="size-9 rounded-full object-cover border border-ink-600 shrink-0" />
-                <div v-else class="size-9 rounded-full bg-ink-800 border border-ink-600 grid place-items-center font-bold text-xs text-ink-300 shrink-0">
-                  {{ u.name[0]?.toUpperCase() }}
+                <div class="relative shrink-0">
+                  <img v-if="u.image" :src="u.image" alt="" class="size-9 rounded-full object-cover border border-ink-600" />
+                  <div v-else class="size-9 rounded-full bg-ink-800 border border-ink-600 grid place-items-center font-bold text-xs text-ink-300">
+                    {{ u.name[0]?.toUpperCase() }}
+                  </div>
+                  <span
+                    v-if="iamSuper && presence[u.id]?.online"
+                    class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-ok ring-2 ring-ink-850"
+                    title="online"
+                  />
                 </div>
                 <div class="min-w-0">
                   <p class="font-semibold truncate">
@@ -174,6 +212,13 @@ async function restore(u: any) {
                     <span v-if="u.id === myId" class="font-mono text-[10px] text-glow">(kamu)</span>
                   </p>
                   <p class="font-mono text-[11px] text-ink-400 truncate">{{ u.email }}</p>
+                  <p
+                    v-if="iamSuper"
+                    class="font-mono text-[10px] truncate"
+                    :class="presence[u.id]?.online ? 'text-ok' : 'text-ink-500'"
+                  >
+                    {{ presence[u.id]?.online ? '● online sekarang' : `terakhir aktif: ${fmtAgo(presence[u.id]?.lastSeenAt)}` }}
+                  </p>
                 </div>
               </div>
             </td>

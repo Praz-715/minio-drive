@@ -19,6 +19,22 @@ export function fmtDate(d?: string | Date | null): string {
   })
 }
 
+/** Waktu relatif ringkas: "baru saja", "5 mnt lalu", "2 jam lalu", "3 hari lalu". */
+export function fmtAgo(d?: string | Date | null): string {
+  if (!d) return 'belum pernah'
+  const date = typeof d === 'string' ? new Date(d) : d
+  if (Number.isNaN(date.getTime())) return '—'
+  const s = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (s < 60) return 'baru saja'
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m} mnt lalu`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h} jam lalu`
+  const day = Math.floor(h / 24)
+  if (day < 30) return `${day} hari lalu`
+  return fmtDate(date)
+}
+
 export function fmtUptime(seconds?: number | null): string {
   if (!seconds) return '—'
   const d = Math.floor(seconds / 86400)

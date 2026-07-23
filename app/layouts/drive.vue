@@ -55,6 +55,29 @@ function doSearch() {
   if (q.length >= 2) navigateTo(`/files/search?q=${encodeURIComponent(q)}`)
 }
 
+// ---- presence heartbeat (fitur "siapa online" untuk super admin) ----
+// Ping ringan tiap 45s SELAMA tab terlihat. Saat tab disembunyikan, denyut
+// berhenti (hemat) → user otomatis dianggap offline setelah jendela lewat;
+// begitu tab terlihat lagi, langsung kirim denyut biar balik online seketika.
+const HEARTBEAT_MS = 45_000
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null
+function sendHeartbeat() {
+  if (document.visibilityState !== 'visible') return
+  $fetch('/api/drive/heartbeat', { method: 'POST' }).catch(() => {})
+}
+function onVisibility() {
+  if (document.visibilityState === 'visible') sendHeartbeat()
+}
+onMounted(() => {
+  sendHeartbeat()
+  heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_MS)
+  document.addEventListener('visibilitychange', onVisibility)
+})
+onBeforeUnmount(() => {
+  if (heartbeatTimer) clearInterval(heartbeatTimer)
+  document.removeEventListener('visibilitychange', onVisibility)
+})
+
 // ---- profil ----
 const showProfile = ref(false)
 const showBranding = ref(false)
