@@ -10,7 +10,7 @@ const loading = ref(false)
 
 function destAfterAuth(): string {
   const r = String(route.query.redirect || '')
-  return r.startsWith('/') && !r.startsWith('//') ? r : '/drive'
+  return r.startsWith('/') && !r.startsWith('//') ? r : '/files'
 }
 const loginTo = computed(() => {
   const r = String(route.query.redirect || '')

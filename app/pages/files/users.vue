@@ -10,7 +10,7 @@ const iamSuper = computed(() => isSuperAdminRole((session.value?.data?.user as a
 watch(
   () => session.value?.data,
   (data) => {
-    if (data && !isAdminRole((data.user as any).role)) navigateTo('/drive')
+    if (data && !isAdminRole((data.user as any).role)) navigateTo('/files')
   },
   { immediate: true },
 )

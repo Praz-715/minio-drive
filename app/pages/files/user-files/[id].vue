@@ -8,7 +8,7 @@ const session = authClient.useSession()
 watch(
   () => session.value?.data,
   (d) => {
-    if (d && !isSuperAdminRole((d.user as any).role)) navigateTo('/drive')
+    if (d && !isSuperAdminRole((d.user as any).role)) navigateTo('/files')
   },
   { immediate: true },
 )

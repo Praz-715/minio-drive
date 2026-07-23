@@ -2,7 +2,7 @@
 definePageMeta({ layout: 'drive' })
 
 // "Dibagikan ke saya" = file/folder yang di-share LANGSUNG ke saya oleh user
-// lain (lewat tombol Bagikan). Bukan bucket bersama — itu di /drive/shared.
+// lain (lewat tombol Bagikan). Bukan bucket bersama — itu di /files/shared.
 const toast = useToast()
 const signals = useDriveSignals()
 const { data, status, refresh } = useFetch('/api/drive/shared-roots', { server: false })
@@ -10,7 +10,7 @@ const shares = computed(() => (data.value as any)?.shares || [])
 
 const previewItem = ref<any>(null)
 function openShare(s: any) {
-  if (s.isFolder) navigateTo(`/drive/folder/${s.id}`)
+  if (s.isFolder) navigateTo(`/files/folder/${s.id}`)
   else previewItem.value = s
 }
 async function download(o: any) {

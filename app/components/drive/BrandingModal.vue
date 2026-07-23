@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Edit Nama & Logo aplikasi — KHUSUS super admin. Dua mode: Default (bawaan
-// "Y" + YASA DRIVE) atau Kustom (nama + logo sendiri). Berlaku global: login,
+// "Y" + FILES) atau Kustom (nama + logo sendiri). Berlaku global: login,
 // drive, dan link publik.
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -90,7 +90,7 @@ async function save() {
           @click="mode = 'default'"
         >
           <p class="text-sm font-semibold">Bawaan</p>
-          <p class="text-[11px] text-ink-400 mt-0.5">Logo Y + YASA DRIVE</p>
+          <p class="text-[11px] text-ink-400 mt-0.5">Logo F + FILES</p>
         </button>
         <button
           type="button"
@@ -109,11 +109,11 @@ async function save() {
         <div class="flex items-center gap-2.5 min-w-0">
           <span class="size-10 rounded-xl bg-glow/15 border border-glow/40 grid place-items-center overflow-hidden shrink-0">
             <img v-if="previewLogo" :src="previewLogo" alt="logo" class="size-full object-contain p-0.5" />
-            <span v-else class="text-glow font-black">Y</span>
+            <span v-else class="text-glow font-black">F</span>
           </span>
           <span class="font-extrabold tracking-tight text-lg truncate">
             <template v-if="previewName">{{ previewName }}</template>
-            <template v-else>YASA <span class="text-glow">DRIVE</span></template>
+            <template v-else><span class="text-glow">FILES</span></template>
           </span>
         </div>
       </div>
@@ -126,10 +126,10 @@ async function save() {
             v-model="form.appName"
             class="input"
             maxlength="40"
-            placeholder="mis. BPKD Drive"
+            placeholder="mis. BPKD Files"
             spellcheck="false"
           />
-          <p class="mt-1 font-mono text-[11px] text-ink-500">Kosongkan kalau mau tetap "YASA DRIVE".</p>
+          <p class="mt-1 font-mono text-[11px] text-ink-500">Kosongkan kalau mau tetap "FILES".</p>
         </div>
 
         <div>

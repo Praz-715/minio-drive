@@ -6,7 +6,7 @@ const session = authClient.useSession()
 watch(
   () => session.value?.data,
   (d) => {
-    if (d && !isAdminRole((d.user as any).role)) navigateTo('/drive')
+    if (d && !isAdminRole((d.user as any).role)) navigateTo('/files')
   },
   { immediate: true },
 )
@@ -148,7 +148,7 @@ async function deleteBucket() {
               <tr v-if="!teams.length"><td colspan="5" class="text-center text-ink-400 py-8">Belum ada bucket bersama.</td></tr>
               <tr v-for="t in teams" :key="t.id" class="group">
                 <td>
-                  <NuxtLink :to="`/drive/team/${t.id}`" class="font-semibold hover:text-glow transition-colors">{{ t.name }}</NuxtLink>
+                  <NuxtLink :to="`/files/team/${t.id}`" class="font-semibold hover:text-glow transition-colors">{{ t.name }}</NuxtLink>
                 </td>
                 <td class="font-mono text-[11px] text-ink-400 hidden md:table-cell">{{ t.bucket }}</td>
                 <td class="font-mono text-xs text-ink-300 hidden sm:table-cell">{{ fmtBytes(t.used) }} / {{ gib(t.quota) }} GiB</td>
@@ -182,9 +182,9 @@ async function deleteBucket() {
               <tr v-for="p in personal" :key="p.bucket" class="group">
                 <td>
                   <NuxtLink
-                    :to="`/drive/user-files/${p.ownerId}`"
+                    :to="`/files/user-files/${p.ownerId}`"
                     class="font-semibold truncate hover:text-glow transition-colors"
-                    title="Jelajah Drive user ini"
+                    title="Jelajah Files user ini"
                   >{{ p.ownerName }}</NuxtLink>
                   <p class="font-mono text-[11px] text-ink-400 truncate">{{ p.ownerEmail }}</p>
                 </td>
@@ -196,7 +196,7 @@ async function deleteBucket() {
           </table>
         </div>
         <p class="mt-2 font-mono text-[11px] text-ink-500">
-          Bucket pribadi dibuat otomatis per user & quota diatur di <NuxtLink to="/drive/users" class="text-glow">Kelola User</NuxtLink>.
+          Bucket pribadi dibuat otomatis per user & quota diatur di <NuxtLink to="/files/users" class="text-glow">Kelola User</NuxtLink>.
         </p>
       </div>
     </template>

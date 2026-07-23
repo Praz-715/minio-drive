@@ -7,8 +7,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // ---- area DRIVE (/drive/*): sesi better-auth (dicek di client) ----
-  if (to.path === '/drive' || to.path.startsWith('/drive/')) {
+  // ---- area DRIVE (/files/*): sesi better-auth (dicek di client) ----
+  if (to.path === '/files' || to.path.startsWith('/files/')) {
     if (import.meta.server) return
     const { data } = await authClient.getSession()
     if (!data?.session) return navigateTo('/')
@@ -18,6 +18,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // halaman login (/) & register: kalau sudah punya sesi, langsung ke Drive
   if ((to.path === '/' || to.path === '/register') && import.meta.client) {
     const { data } = await authClient.getSession()
-    if (data?.session) return navigateTo('/drive')
+    if (data?.session) return navigateTo('/files')
   }
 })

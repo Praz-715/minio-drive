@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Terima satu item (`item`) atau banyak (`items`). Tujuan bisa Drive pribadi
+// Terima satu item (`item`) atau banyak (`items`). Tujuan bisa Files pribadi
 // ATAU bucket bersama (tim) — objek dipindah lintas-bucket oleh endpoint /move.
 const props = defineProps<{ item?: any | null; items?: any[] | null }>()
 const emit = defineEmits<{ close: []; moved: [] }>()
@@ -110,9 +110,9 @@ async function moveHere() {
         <div class="border border-ink-700 rounded-lg divide-y divide-ink-800 overflow-hidden">
           <button
             class="w-full text-left px-3 py-3 text-sm hover:bg-ink-800 transition-colors cursor-pointer flex items-center gap-2.5"
-            @click="enterScope({ kind: 'personal', name: 'Drive Saya' })"
+            @click="enterScope({ kind: 'personal', name: 'Files Saya' })"
           >
-            <span>🗂️</span> <span class="font-semibold">Drive Saya</span>
+            <span>🗂️</span> <span class="font-semibold">Files Saya</span>
           </button>
           <button
             v-for="t in teams"

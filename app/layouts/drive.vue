@@ -31,7 +31,7 @@ watch(() => route.fullPath, () => {
 
 function triggerUpload() {
   if (!ctx.value.canUpload) {
-    toast.info('Buka Drive Saya atau folder yang bisa kamu tulis dulu')
+    toast.info('Buka Files Saya atau folder yang bisa kamu tulis dulu')
     return
   }
   newMenuOpen.value = false
@@ -40,7 +40,7 @@ function triggerUpload() {
 }
 function triggerFolder() {
   if (!ctx.value.canUpload) {
-    toast.info('Buka Drive Saya atau folder yang bisa kamu tulis dulu')
+    toast.info('Buka Files Saya atau folder yang bisa kamu tulis dulu')
     return
   }
   newMenuOpen.value = false
@@ -52,7 +52,7 @@ function triggerFolder() {
 const search = ref(String(route.query.q || ''))
 function doSearch() {
   const q = search.value.trim()
-  if (q.length >= 2) navigateTo(`/drive/search?q=${encodeURIComponent(q)}`)
+  if (q.length >= 2) navigateTo(`/files/search?q=${encodeURIComponent(q)}`)
 }
 
 // ---- profil ----
@@ -117,10 +117,10 @@ async function logout() {
 }
 
 const nav = computed(() => [
-  { to: '/drive', label: 'Drive Saya', icon: '🗂️', active: route.path === '/drive' || route.path.startsWith('/drive/folder') },
-  { to: '/drive/recent', label: 'Terbaru', icon: '🕘', active: route.path === '/drive/recent' },
-  { to: '/drive/starred', label: 'Berbintang', icon: '⭐', active: route.path === '/drive/starred' },
-  { to: '/drive/trash', label: 'Sampah', icon: '🗑️', active: route.path === '/drive/trash' },
+  { to: '/files', label: 'Files Saya', icon: '🗂️', active: route.path === '/files' || route.path.startsWith('/files/folder') },
+  { to: '/files/recent', label: 'Terbaru', icon: '🕘', active: route.path === '/files/recent' },
+  { to: '/files/starred', label: 'Berbintang', icon: '⭐', active: route.path === '/files/starred' },
+  { to: '/files/trash', label: 'Sampah', icon: '🗑️', active: route.path === '/files/trash' },
 ])
 </script>
 
@@ -138,7 +138,7 @@ const nav = computed(() => [
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="px-4 pt-5 pb-4 flex items-center justify-between">
-        <NuxtLink to="/drive" class="min-w-0">
+        <NuxtLink to="/files" class="min-w-0">
           <BrandMark size="sm" />
         </NuxtLink>
         <button class="lg:hidden size-9 grid place-items-center text-ink-400 hover:text-ink-100 cursor-pointer" aria-label="Tutup menu" @click="sidebarOpen = false">✕</button>
@@ -166,22 +166,22 @@ const nav = computed(() => [
           <span>{{ item.icon }}</span>{{ item.label }}
         </NuxtLink>
 
-        <!-- Drive Bersama = bucket bersama (team) saja -->
+        <!-- Files Bersama = bucket bersama (team) saja -->
         <NuxtLink
-          to="/drive/shared"
+          to="/files/shared"
           class="flex items-center gap-3 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-semibold transition-colors"
-          :class="route.path === '/drive/shared' ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
+          :class="route.path === '/files/shared' ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
         >
-          <span>👥</span>Drive Bersama
+          <span>👥</span>Files Bersama
         </NuxtLink>
         <!-- maksimal ~3 terlihat; sisanya scroll di section ini saja -->
         <div v-if="sharedTeams.length" class="ml-6 border-l border-ink-700 pl-2 space-y-0.5 max-h-[6.5rem] overflow-y-auto sidebar-scroll">
           <NuxtLink
             v-for="t in sharedTeams"
             :key="t.id"
-            :to="`/drive/team/${t.id}`"
+            :to="`/files/team/${t.id}`"
             class="flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] transition-colors truncate"
-            :class="route.path === `/drive/team/${t.id}` ? 'text-glow' : 'text-ink-400 hover:text-ink-100'"
+            :class="route.path === `/files/team/${t.id}` ? 'text-glow' : 'text-ink-400 hover:text-ink-100'"
           >
             <span class="font-mono text-[10px] shrink-0">▦</span>
             <span class="truncate flex-1 min-w-0">{{ t.name }}</span>
@@ -190,9 +190,9 @@ const nav = computed(() => [
 
         <!-- Dibagikan ke saya = file/folder yang di-share langsung -->
         <NuxtLink
-          to="/drive/shared-with-me"
+          to="/files/shared-with-me"
           class="flex items-center gap-3 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-semibold transition-colors"
-          :class="route.path === '/drive/shared-with-me' ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
+          :class="route.path === '/files/shared-with-me' ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
         >
           <span>🔗</span>Dibagikan ke saya
         </NuxtLink>
@@ -201,9 +201,9 @@ const nav = computed(() => [
           <NuxtLink
             v-for="s in sharedItems"
             :key="s.id"
-            :to="s.isFolder ? `/drive/folder/${s.id}` : '/drive/shared-with-me'"
+            :to="s.isFolder ? `/files/folder/${s.id}` : '/files/shared-with-me'"
             class="flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors"
-            :class="route.path === `/drive/folder/${s.id}` ? 'text-glow' : 'text-ink-400 hover:text-ink-100'"
+            :class="route.path === `/files/folder/${s.id}` ? 'text-glow' : 'text-ink-400 hover:text-ink-100'"
           >
             <span class="font-mono text-[10px] shrink-0">{{ s.isFolder ? '▸' : '·' }}</span>
             <span class="flex-1 min-w-0 leading-tight">
@@ -233,16 +233,16 @@ const nav = computed(() => [
         <template v-if="isAdmin">
           <div class="border-t border-ink-800 my-2" />
           <NuxtLink
-            to="/drive/users"
+            to="/files/users"
             class="flex items-center gap-3 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-semibold transition-colors"
-            :class="route.path.startsWith('/drive/users') ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
+            :class="route.path.startsWith('/files/users') ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
           >
             <span>👤</span>Kelola User
           </NuxtLink>
           <NuxtLink
-            to="/drive/buckets"
+            to="/files/buckets"
             class="flex items-center gap-3 px-3 py-2.5 lg:py-2 rounded-lg text-sm font-semibold transition-colors"
-            :class="route.path.startsWith('/drive/buckets') ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
+            :class="route.path.startsWith('/files/buckets') ? 'bg-glow/10 text-glow' : 'text-ink-300 hover:text-ink-100 hover:bg-ink-800'"
           >
             <span>🪣</span>Manajemen Bucket
           </NuxtLink>

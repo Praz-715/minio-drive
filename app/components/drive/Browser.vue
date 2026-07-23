@@ -3,7 +3,7 @@ const props = defineProps<{
   mode: 'browse' | 'recent' | 'starred' | 'trash' | 'search'
   parent?: string
   team?: string
-  owner?: string // super admin: jelajah root Drive pribadi user lain
+  owner?: string // super admin: jelajah root Files pribadi user lain
   q?: string
 }>()
 
@@ -45,8 +45,8 @@ const title = computed(() => {
   if (props.mode !== 'browse') return TITLES[props.mode]
   if (folder.value) return folder.value.name
   if (teamRoot.value) return teamRoot.value.name
-  if (ownerRoot.value) return `Drive: ${ownerRoot.value.name}`
-  return 'Drive Saya'
+  if (ownerRoot.value) return `Files: ${ownerRoot.value.name}`
+  return 'Files Saya'
 })
 
 // beritahu layout: lokasi aktif & boleh upload atau tidak.
@@ -263,7 +263,7 @@ function openItem(o: any) {
     menuFor.value = o
     return
   }
-  if (o.isFolder) navigateTo(`/drive/folder/${o.id}`)
+  if (o.isFolder) navigateTo(`/files/folder/${o.id}`)
   else previewItem.value = o
 }
 function isOwner(o: any) {
@@ -391,12 +391,12 @@ async function onMoved() {
       <div class="min-w-0 flex-1">
         <div v-if="mode === 'browse' && crumbs.length" class="flex items-center gap-1.5 font-mono text-xs text-ink-400 flex-wrap mb-1">
           <NuxtLink
-            :to="teamRoot ? `/drive/team/${teamRoot.id}` : '/drive'"
+            :to="teamRoot ? `/files/team/${teamRoot.id}` : '/files'"
             class="hover:text-glow transition-colors"
-          >{{ teamRoot ? teamRoot.name : 'Drive Saya' }}</NuxtLink>
+          >{{ teamRoot ? teamRoot.name : 'Files Saya' }}</NuxtLink>
           <template v-for="(c, i) in crumbs" :key="c.id">
             <span class="text-ink-600">/</span>
-            <NuxtLink v-if="i < crumbs.length - 1" :to="`/drive/folder/${c.id}`" class="hover:text-glow transition-colors">{{ c.name }}</NuxtLink>
+            <NuxtLink v-if="i < crumbs.length - 1" :to="`/files/folder/${c.id}`" class="hover:text-glow transition-colors">{{ c.name }}</NuxtLink>
             <span v-else class="text-ink-200">{{ c.name }}</span>
           </template>
         </div>
@@ -543,7 +543,7 @@ async function onMoved() {
       <div class="grid gap-1.5">
         <template v-if="mode !== 'trash'">
           <button v-if="!menuFor?.isFolder" class="btn-ghost justify-start" @click="previewItem = menuFor; menuFor = null">👁 Preview</button>
-          <button v-if="menuFor?.isFolder" class="btn-ghost justify-start" @click="navigateTo(`/drive/folder/${menuFor.id}`); menuFor = null">▸ Buka folder</button>
+          <button v-if="menuFor?.isFolder" class="btn-ghost justify-start" @click="navigateTo(`/files/folder/${menuFor.id}`); menuFor = null">▸ Buka folder</button>
           <button v-if="!menuFor?.isFolder" class="btn-ghost justify-start" @click="download(menuFor); menuFor = null">↓ Download</button>
           <button v-if="!menuFor?.isFolder" class="btn-ghost justify-start" @click="detailItem = menuFor; menuFor = null">ⓘ Detail</button>
           <button v-if="isOwner(menuFor)" class="btn-ghost justify-start" @click="shareItem = menuFor; menuFor = null">⇗ Bagikan</button>

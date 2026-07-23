@@ -185,7 +185,7 @@ onMounted(async () => {
 })
 
 useHead({
-  title: () => (meta.value?.found && meta.value?.name ? `${meta.value.name} · Yasa Drive` : 'Yasa Drive'),
+  title: () => (meta.value?.found && meta.value?.name ? `${meta.value.name} · Files` : 'Files'),
 })
 </script>
 
@@ -207,12 +207,12 @@ useHead({
       <div v-if="claimed" class="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-6 py-2.5 bg-glow/10 border-b border-glow/30 text-sm">
         <span class="text-glow font-semibold">✓</span>
         <span class="flex-1 min-w-40">
-          {{ claimed.already ? `${claimed.isFolder ? 'Folder' : 'File'} ini sudah ada di Drive kamu.` : `${claimed.isFolder ? 'Folder' : 'File'} ditambahkan ke Drive kamu.` }}
+          {{ claimed.already ? `${claimed.isFolder ? 'Folder' : 'File'} ini sudah ada di Files kamu.` : `${claimed.isFolder ? 'Folder' : 'File'} ditambahkan ke Files kamu.` }}
         </span>
         <NuxtLink
-          :to="claimed.isFolder ? `/drive/folder/${claimed.fileId}` : '/drive/shared-with-me'"
+          :to="claimed.isFolder ? `/files/folder/${claimed.fileId}` : '/files/shared-with-me'"
           class="btn-primary h-9 text-xs shrink-0"
-        >Buka di Drive saya</NuxtLink>
+        >Buka di Files saya</NuxtLink>
       </div>
     </Transition>
 
@@ -223,7 +223,7 @@ useHead({
         class="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-6 py-2.5 border-b border-ink-800 bg-ink-900/40 text-sm"
       >
         <span class="flex-1 min-w-40 text-ink-300">
-          Punya akun? <span class="hidden sm:inline">Login biar {{ meta.isFolder ? 'folder' : 'file' }} ini otomatis nempel di Drive kamu.</span>
+          Punya akun? <span class="hidden sm:inline">Login biar {{ meta.isFolder ? 'folder' : 'file' }} ini otomatis nempel di Files kamu.</span>
         </span>
         <NuxtLink :to="`/?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-primary h-9 text-xs shrink-0">Login</NuxtLink>
         <NuxtLink :to="`/register?redirect=${encodeURIComponent('/s/' + token)}`" class="btn-ghost h-9 text-xs shrink-0">Daftar</NuxtLink>
@@ -236,7 +236,7 @@ useHead({
         <p class="text-5xl mb-3">🔍</p>
         <h1 class="text-xl font-extrabold tracking-tight">Link tidak ditemukan</h1>
         <p class="text-ink-400 text-sm mt-2">Tautan ini salah, sudah dicabut, atau isinya sudah dihapus.</p>
-        <NuxtLink to="/" class="btn-ghost mt-6">Ke Yasa Drive</NuxtLink>
+        <NuxtLink to="/" class="btn-ghost mt-6">Ke Files</NuxtLink>
       </div>
 
       <!-- kedaluwarsa -->
@@ -246,7 +246,7 @@ useHead({
         <p class="text-ink-400 text-sm mt-2">
           Tautan untuk <span class="font-mono text-ink-200">{{ meta.name }}</span> sudah lewat masa berlaku.
         </p>
-        <NuxtLink to="/" class="btn-ghost mt-6">Ke Yasa Drive</NuxtLink>
+        <NuxtLink to="/" class="btn-ghost mt-6">Ke Files</NuxtLink>
       </div>
 
       <!-- gerbang password (file & folder) -->
@@ -384,7 +384,7 @@ useHead({
 
     <footer class="shrink-0 py-4 text-center">
       <p class="font-mono text-[11px] text-ink-500">
-        Dibagikan lewat <NuxtLink to="/" class="text-glow hover:underline">Office Drive</NuxtLink>
+        Dibagikan lewat <NuxtLink to="/" class="text-glow hover:underline">Files</NuxtLink>
       </p>
     </footer>
   </div>

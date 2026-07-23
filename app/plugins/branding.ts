@@ -2,7 +2,7 @@ import type { Branding } from '../composables/useBranding'
 
 /**
  * Ambil branding sekali di server; nilainya ikut ter-hydrate ke client lewat
- * useState (payload), jadi login/drive/link publik semua render brand yang benar
+ * useState (payload), jadi login/files/link publik semua render brand yang benar
  * tanpa flash & tanpa fetch dobel di client.
  */
 export default defineNuxtPlugin(async () => {

@@ -23,7 +23,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'Drive',
+      title: 'Files',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', media: '(prefers-color-scheme: light)', content: '#f4f5f7' },

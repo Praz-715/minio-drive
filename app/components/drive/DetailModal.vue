@@ -36,7 +36,7 @@ const locationLabel = computed(() => {
   const d = detail.value
   if (!d) return ''
   const parts = (d.location || []).map((c: any) => c.name)
-  const root = d.teamName ? d.teamName : 'Drive Saya'
+  const root = d.teamName ? d.teamName : 'Files Saya'
   return [root, ...parts].join(' / ')
 })
 </script>

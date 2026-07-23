@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Logo + nama aplikasi. Baca branding kustom (useBranding); kalau kosong pakai
-// bawaan: kotak "Y" + "YASA DRIVE". Dipakai di login, sidebar drive, & link publik.
+// bawaan: kotak "F" + "FILES". Dipakai di login, sidebar files, & link publik.
 const props = withDefaults(defineProps<{ size?: 'sm' | 'md' | 'lg'; subtitle?: string }>(), {
   size: 'sm',
 })
@@ -27,12 +27,12 @@ const nameCls = props.size === 'sm' ? '' : 'text-2xl leading-none'
         alt="logo"
         class="size-full object-contain p-0.5"
       />
-      <span v-else class="text-glow font-black">Y</span>
+      <span v-else class="text-glow font-black">F</span>
     </span>
     <span class="min-w-0">
       <span class="block font-extrabold tracking-tight truncate" :class="nameCls">
         <template v-if="branding.appName">{{ branding.appName }}</template>
-        <template v-else>YASA <span class="text-glow">DRIVE</span></template>
+        <template v-else><span class="text-glow">FILES</span></template>
       </span>
       <span
         v-if="subtitle"
