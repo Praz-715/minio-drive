@@ -2,7 +2,7 @@
 
 > Dokumen serah-terima state proyek. Dibuat 8 Jul 2026 · **terakhir diupdate 23 Jul 2026**. Baca ini dulu sebelum lanjut ngoding.
 >
-> ⚡ **State TERBARU ada di §21** (PWA installable + halaman offline · matikan pendaftaran publik — user hanya dibuat admin). §20 = rebrand "Drive"→"Files" + presence "siapa online" + samaran super_admin→admin. §19 = fix natural-sort + rebrand "Office Drive" + roadmap. §18 = audit+5fix, logging, responsive, Detail, branding kustom+caching, favicon. §17 = share publik folder + RBAC super_admin/god-mode. Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id** (rencana diganti, mis. `files.*`). HEAD: commit `42de20c`.
+> ⚡ **State TERBARU ada di §21** (PWA installable + halaman offline · matikan pendaftaran publik · fix tombol install · **domain app pindah ke `files.savgroup.my.id`**). §20 = rebrand "Drive"→"Files" + presence "siapa online" + samaran super_admin→admin. §19 = fix natural-sort + rebrand "Office Drive" + roadmap. §18 = audit+5fix, logging, responsive, Detail, branding kustom+caching, favicon. §17 = share publik folder + RBAC super_admin/god-mode. Kalau bentrok, **nomor lebih besar yang benar**. **App LIVE: `https://files.savgroup.my.id`** (bukan lagi `drive.savgroup.my.id`). HEAD: commit `4088dc3`.
 >
 > ⚠️ **Deploy sekarang butuh `npm install`** (ada dependency baru `@vite-pwa/nuxt`): `git pull && npm install && npm run build && sudo systemctl restart yasa-drive`.
 
@@ -417,5 +417,15 @@ Registrasi mandiri **dinonaktifkan**; akun baru **HANYA** dibuat admin lewat **K
 - **Sign-IN tetap jalan** (middleware cuma blokir `/sign-up`). Menutup rekomendasi audit §15.
 - Diverifikasi: sign-up publik **403**, sign-in **200/401**, admin create **200** (user tes dibuat lalu dihapus tuntas: baris DB + bucket MinIO).
 
-### 21.3 ⚠️ Outstanding (tetap)
-🔐 **ROTASI SECRET bocor (PALING KRITIS, BELUM)** · service account MinIO khusus (root) · bind `127.0.0.1` · **DB dev = DB prod** (§18.8). Baru/minor: ikon **maskable** khusus (sekarang pakai-ulang 512), hardening server samaran role (§20.3), ganti domain ke `files.*`.
+### 21.3 Fix tombol install PWA (commit `4088dc3`)
+Tombol "Install aplikasi" tak muncul karena `@vite-pwa/nuxt` pasang listener `beforeinstallprompt` **telat** — di reload/kunjungan kedua Chrome nge-fire duluan sebelum bundle jalan → event kelewatan, `$pwa.showInstallPrompt` tak pernah `true`.
+- **Fix**: skrip inline di `<head>` ([nuxt.config.ts](nuxt.config.ts)) menangkap `beforeinstallprompt` **sedini mungkin** → `window.__pwaInstall` + event `pwa:can-install`/`pwa:installed`. Composable **[app/composables/useInstall.ts](app/composables/useInstall.ts)** (`canInstall` + `promptInstall`) membaca itu; **buang pemakaian `$pwa`** yang tak reliable.
+- Tombol install kini di **halaman login `/`** ([index.vue](app/pages/index.vue)) **DAN** dropdown profil ([drive.vue](app/layouts/drive.vue)) — dua-duanya pakai composable ini. Muncul hanya kalau browser menawarkan install (Chromium, belum ter-install); **iOS Safari & Firefox** tak fire event → tombol tak muncul (install manual). Diverifikasi live oleh user: tombol muncul.
+
+### 21.4 Domain app pindah → files.savgroup.my.id
+- App sekarang LIVE di **`https://files.savgroup.my.id`** (path app tetap `/files`). **`drive.savgroup.my.id` tidak dipakai lagi.**
+- ⚠️ Di server WAJIB `BETTER_AUTH_URL=https://files.savgroup.my.id` (dipakai cookie, `trustedOrigins` better-auth, & base URL link publik `/s`). MinIO publik `s3.savgroup.my.id` **tak berubah**.
+- **Tak ada domain hardcode di kode** (semua via `.env`) → cukup set env di server, tanpa ubah kode.
+
+### 21.5 ⚠️ Outstanding (tetap)
+🔐 **ROTASI SECRET bocor (PALING KRITIS, BELUM)** · service account MinIO khusus (root) · bind `127.0.0.1` · **DB dev = DB prod** (§18.8). Baru/minor: ikon **maskable** khusus (sekarang pakai-ulang 512), hardening server samaran role (§20.3). ~~ganti domain~~ → **DONE (§21.4)**.
