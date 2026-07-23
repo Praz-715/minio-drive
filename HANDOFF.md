@@ -1,8 +1,8 @@
 # Yasa — Handoff
 
-> Dokumen serah-terima state proyek. Dibuat 8 Jul 2026 · **terakhir diupdate 14 Jul 2026**. Baca ini dulu sebelum lanjut ngoding.
+> Dokumen serah-terima state proyek. Dibuat 8 Jul 2026 · **terakhir diupdate 23 Jul 2026**. Baca ini dulu sebelum lanjut ngoding.
 >
-> ⚡ **State TERBARU ada di §19** (fix natural-sort, rebrand → "Office Drive", + roadmap dari analisis vs Google Drive & rencana preview Office). §18 = sesi besar sebelumnya (audit+5fix, logging, responsive, Detail file, branding kustom+caching, favicon). §17 = share publik folder + RBAC super_admin/god-mode. Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id**. HEAD: commit `b256281`.
+> ⚡ **State TERBARU ada di §20** (rebrand "Drive" → "Files" di frontend + fitur presence "siapa online" untuk super admin + samaran super_admin→admin buat viewer non-super). §19 = fix natural-sort + rebrand "Office Drive" + roadmap. §18 = audit+5fix, logging, responsive, Detail, branding kustom+caching, favicon. §17 = share publik folder + RBAC super_admin/god-mode. Kalau bentrok, **nomor lebih besar yang benar**. Domain **savgroup.my.id** (rencana diganti, mis. `files.*`). HEAD: commit `a9a17a2`.
 
 ## 1. Apa ini
 
@@ -347,3 +347,46 @@ Rekomendasi (dari diskusi):
 
 ### 19.6 ⚠️ Outstanding (tetap, belum berubah dari §18.9)
 🔐 **ROTASI SECRET bocor (PALING KRITIS, BELUM)** · service account MinIO khusus · bind `127.0.0.1`. Plus catatan: **DB dev = DB server (shared 192.168.1.111 ≡ localhost)** — migrate/test lokal langsung kena produksi (lihat §18.8).
+
+## 20. Sesi 23 Jul 2026 — rebrand "Drive"→"Files", fitur presence "siapa online", samaran role
+
+> State **TERBARU**. HEAD: commit **`a9a17a2`** (branch `main`, repo `Praz-715/minio-drive`). Semua sudah di-commit & push. Diverifikasi via **API + SSR** di dev (localhost:3000) — **bukan** klik-per-klik browser (tak ada Playwright/chromium di env sesi ini).
+
+### 20.0 Urutan commit sesi ini
+`8201b8d` rebrand Drive→Files → `ba22fcd` fitur presence → `a9a17a2` samaran super_admin.
+
+### 20.1 Rebrand frontend "Drive" → "Files" (commit `8201b8d`)
+Permintaan atasan: semua kata "Drive" yang **kelihatan user** jadi **"Files"** (domain juga bakal ganti — belum). **FRONTEND ONLY** — `server/` tak disentuh.
+- **Route**: folder `app/pages/drive/` → **`app/pages/files/`** (git mv, 12 halaman). Semua path `/drive/*` → **`/files/*`** (NuxtLink, navigateTo, guard `app/middleware/auth.global.ts`). Route `/drive` lama sekarang **404**.
+- **Teks tampilan**: "Drive Saya"→"Files Saya", "Drive Bersama"→"Files Bersama", toast, breadcrumb, halaman login/`/s`, dll.
+- **Brand fallback** ([app/components/BrandMark.vue](app/components/BrandMark.vue)): "YASA DRIVE"→**"FILES"** + kotak logo **"Y"→"F"**. Title tab (`nuxt.config.ts`) "Drive"→**"Files"**. PWA (`public/site.webmanifest`) "Office Drive"→**"Files"**.
+- ⚠️ **SENGAJA TIDAK diubah** (ada MISMATCH by design — jangan bingung / jangan "rapikan"):
+  - **API tetap `/api/drive/*`** & `/api/drive-auth` (kontrak backend).
+  - Tag komponen **`<DriveBrowser>` dst** (auto-import dari `app/components/drive/`, prefix "Drive"), composable **`useDriveCtx`/`useDriveSignals`**, useState key `drive-ctx`, **nama layout `'drive'`** ([app/layouts/drive.vue](app/layouts/drive.vue), dipakai `definePageMeta({ layout: 'drive' })` di tiap page).
+  - **"Drives" di Console** (`/console`) = **disk fisik MinIO**, BUKAN produk → tetap.
+- Jadi realitanya sekarang: **route = `/files`**, **API = `/api/drive`**, **kode = `Drive*` / layout `drive`**. Mismatch ini **normal & disengaja** biar tetap frontend-only.
+- Identitas produk condong ke **"Files"** (fallback). Prod pakai branding kustom DB **"Milik Bersama"** (bukan default). Folder repo `ghanem-yasatech-file-sharing` & systemd `yasa-drive.service` **tetap**.
+- Diverifikasi: `/files`+`/files/*` → 200, `/drive` → 404, title "Files"; **E2E share file/folder/bucket + link publik `/s` = 24/24 PASS** (login teguh super; artefak tes dihapus bersih).
+
+### 20.2 Fitur presence — super admin lihat "siapa online" + "terakhir aktif" (commit `ba22fcd`)
+Pendekatan **heartbeat + last-seen di DB** (dipilih ketimbang WebSocket in-memory: tanpa infra baru, DB-backed → aman kalau nanti multi-instance).
+- **DB**: kolom baru **`user.last_seen_at`** (timestamptz, nullable) — migrasi **`0004_violet_nightmare.sql`** (additive). ⚠️ **SUDAH di-apply ke DB shared/prod** dari lokal (DB dev = prod, §18.8) → `db:migrate` di server bakal **no-op**.
+- **`POST /api/drive/heartbeat`** ([server/api/drive/heartbeat.post.ts](server/api/drive/heartbeat.post.ts), butuh sesi): set `last_seen_at = now()`.
+- **`GET /api/drive/presence`** ([server/api/drive/presence.get.ts](server/api/drive/presence.get.ts), **KHUSUS super admin** via `requireDriveSuperAdmin`): balikin `[{ id, online, lastSeenAt }]`; **online = last_seen dalam 100 dtk terakhir**.
+- **Client** ([app/layouts/drive.vue](app/layouts/drive.vue)): kirim heartbeat tiap **45 dtk SELAMA tab terlihat** (Page Visibility API — pause saat tab disembunyikan, denyut langsung begitu tab kembali terlihat).
+- **UI** ([app/pages/files/users.vue](app/pages/files/users.vue), tampil **hanya untuk super admin**): hitungan **"N online"** di header, **titik hijau** di avatar user online, sub-baris **"● online sekarang"** / **"terakhir aktif: X lalu"**; polling `/presence` tiap **20 dtk**. Helper baru **`fmtAgo()`** di [app/utils/format.ts](app/utils/format.ts).
+- **Tuning** (semua konstanta, gampang digeser): heartbeat **45s** (`drive.vue`), jendela online **100s** (`presence.get.ts` ≈ 2× interval + slack), poll UI **20s** (`users.vue`).
+- **Guard**: heartbeat tanpa sesi → **401**; presence utk user/admin biasa → **403** (super only). Diverifikasi E2E (login teguh super + ichsan user): **12/12 PASS** (termasuk multi-user online & guard).
+
+### 20.3 Samaran super_admin → "admin" untuk viewer non-super (commit `a9a17a2`)
+Di [app/pages/files/users.vue](app/pages/files/users.vue): kalau yang buka **admin biasa** (bukan super), baris user yang aslinya `super_admin` ditampilkan sebagai **"admin"** (tanpa bintang ★) → admin ngiranya cuma ada 2 role (user & admin). Super admin tetap lihat **"★ super admin"** asli.
+- Helper `shownRole()`; **role ASLI (`u.role`) tetap dipakai untuk guard tombol** edit/nonaktif → tombol **tetap hilang** di baris super_admin walau labelnya "admin". Dropdown role di modal tambah/edit sudah gate opsi `super_admin` ke `iamSuper`.
+- ⚠️ **Penyamaran VISUAL saja**: `/api/drive/users` **MASIH kirim `role: "super_admin"` asli** di JSON → bisa bocor via DevTools/Network. Belum ada hardening server (sengaja — biar guard tombol tetap bisa pakai role asli). Kalau mau samaran total, mask di server + jaga guard edit di server (keluar dari frontend-only).
+
+### 20.4 Deploy & catatan
+- Deploy: `cd /opt/minio-drive && git pull && npm run build && sudo systemctl restart yasa-drive`. **`db:migrate` opsional/no-op** (kolom `last_seen_at` sudah ada di DB prod).
+- Fitur presence nambah tulis DB ringan (1 update/45s per user online) — remeh buat Postgres skala puluhan user.
+- Efek tes sesi ini: heartbeat E2E men-set `last_seen_at` teguh & ichsan = now → sempat "online" ~100 dtk lalu auto-expire (bukan bug).
+
+### 20.5 ⚠️ Outstanding (tetap, belum berubah dari §19.6)
+🔐 **ROTASI SECRET bocor (PALING KRITIS, BELUM)** · service account MinIO khusus (masih root) · bind `127.0.0.1`. **DB dev = DB prod (shared)** — migrate/test lokal langsung kena prod (§18.8). Belum: ganti domain (`drive.savgroup.my.id` → mis. `files.*`), hardening server utk samaran role (§20.3).
